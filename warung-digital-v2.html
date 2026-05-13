@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>Warung Digital</title>
+<style>
+/* ── RESET & BASE ─────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{height:100%;-webkit-text-size-adjust:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  background:#d8d5d0;
+  display:flex;justify-content:center;
+  min-height:100vh;min-height:100dvh;
+  overscroll-behavior:none;
+}
+button,input{font-family:inherit;-webkit-appearance:none;appearance:none}
+input[type=number]{-moz-appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+
+/* ── APP SHELL ────────────────────────────────────────── */
+#app{
+  width:100%;max-width:430px;
+  min-height:100vh;min-height:100dvh;
+  background:#f4f2ef;
+  position:relative;
+  overflow-x:hidden;
+  box-shadow:0 0 60px rgba(0,0,0,.2);
+}
+
+/* ── ANIMATIONS ───────────────────────────────────────── */
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes floatA{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-12px) rotate(8deg)}}
+@keyframes floatB{0%,100%{transform:translateY(0)}50%{transform:translateY(10px)}}
+@keyframes floatC{0%,100%{transform:translateX(0)}50%{transform:translateX(8px)}}
+@keyframes rotateSlow{to{transform:rotate(360deg)}}
+@keyframes pulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+
+.anim-up {animation:slideUp .38s cubic-bezier(.16,1,.3,1) both}
+.anim-up1{animation:slideUp .38s .07s cubic-bezier(.16,1,.3,1) both}
+.anim-up2{animation:slideUp .38s .14s cubic-bezier(.16,1,.3,1) both}
+.fade-in {animation:fadeIn .25s ease both}
+.float-a {animation:floatA 7s ease-in-out infinite}
+.float-b {animation:floatB 9s ease-in-out infinite}
+.float-c {animation:floatC 11s ease-in-out infinite}
+.rot-slow{animation:rotateSlow 30s linear infinite}
+
+/* ── PAGE SYSTEM ──────────────────────────────────────── */
+.page{display:none}
+.page.active{display:block}
+.view{display:none}
+.view.active{display:flex;flex-direction:column;gap:16px;padding:16px 16px 0}
+
+/* ── LOGIN ────────────────────────────────────────────── */
+#pg-login{
+  min-height:100vh;min-height:100dvh;
+  background:linear-gradient(165deg,#152515 0%,#2a4a2a 48%,#ede9e3 100%);
+  position:relative;overflow:hidden;
+}
+.login-abs{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.login-hero{
+  padding:70px 24px 44px;
+  text-align:center;position:relative;z-index:1;
+}
+.login-icon{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:76px;height:76px;border-radius:22px;
+  background:rgba(255,255,255,.1);
+  border:1.5px solid rgba(255,255,255,.18);
+  margin-bottom:18px;font-size:36px;
+}
+.login-title{
+  font-size:32px;font-weight:800;
+  color:#fff;letter-spacing:-.03em;
+  font-style:italic;
+}
+.login-tagline{font-size:13px;color:rgba(255,255,255,.55);margin-top:6px}
+.login-card{
+  margin:0 14px;padding:22px;
+  background:#fff;border-radius:26px;
+  box-shadow:0 16px 50px rgba(0,0,0,.2);
+  position:relative;z-index:1;
+}
+.login-card h2{font-size:19px;font-weight:800;color:#111;margin-bottom:3px}
+.login-card p{font-size:12px;color:#9ca3af;margin-bottom:20px}
+.lbl{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:5px}
+.inp{
+  width:100%;border:1.5px solid #e5e7eb;
+  background:#fafafa;border-radius:14px;
+  padding:12px 14px;font-size:14px;
+  transition:border-color .2s,box-shadow .2s;
+  outline:none;margin-bottom:11px;color:#111;
+}
+.inp:focus{border-color:#3a7d3a;box-shadow:0 0 0 3px rgba(58,125,58,.1)}
+.btn-main{
+  width:100%;background:linear-gradient(135deg,#2a5a2a,#3a7a3a);
+  color:#fff;border:none;border-radius:14px;
+  padding:13px;font-size:14px;font-weight:700;
+  cursor:pointer;box-shadow:0 4px 16px rgba(42,90,42,.32);
+  transition:transform .15s,opacity .15s;
+}
+.btn-main:active{transform:scale(.97);opacity:.9}
+.divider{display:flex;align-items:center;gap:10px;margin:16px 0}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#f0f0f0}
+.divider span{font-size:11px;color:#9ca3af;font-weight:500}
+.btn-outline{
+  width:100%;background:#fff;border:1.5px solid #e9e9e9;
+  border-radius:14px;padding:11px;font-size:13px;font-weight:600;
+  color:#555;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:background .15s;
+}
+.btn-outline:active{background:#f5f5f5}
+.login-foot{text-align:center;font-size:11px;color:rgba(255,255,255,.25);padding:24px 0;position:relative;z-index:1}
+
+/* ── DASHBOARD ────────────────────────────────────────── */
+#pg-dash{min-height:100vh;min-height:100dvh;padding-bottom:76px}
+
+/* ── TOPBAR ───────────────────────────────────────────── */
+.topbar{
+  background:#182818;color:#fff;
+  padding:44px 16px 18px;
+  position:sticky;top:0;z-index:20;
+  overflow:hidden;
+}
+.topbar-abs{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.topbar-row{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1}
+.tb-btn{
+  width:38px;height:38px;border-radius:12px;
+  background:rgba(255,255,255,.09);border:none;color:#fff;
+  font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .15s;flex-shrink:0;
+}
+.tb-btn:active{background:rgba(255,255,255,.18)}
+.tb-center{text-align:center;flex:1;padding:0 8px}
+.tb-date{font-size:10px;color:rgba(255,255,255,.45);font-weight:500}
+.tb-title{font-size:17px;font-weight:800;letter-spacing:-.01em}
+.tb-notif{position:relative}
+.nb-dot{
+  position:absolute;top:5px;right:5px;width:7px;height:7px;
+  border-radius:50%;background:#7ec84a;
+  animation:pulseDot 2s infinite;
+}
+
+/* ── STAT GRID ────────────────────────────────────────── */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sc{
+  border-radius:20px;padding:14px;
+  border:1px solid rgba(0,0,0,.04);
+  position:relative;overflow:hidden;
+  transition:transform .15s;
+}
+.sc:active{transform:scale(.96)}
+.sc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;position:relative;z-index:1}
+.sc-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;opacity:.7}
+.sc-ico{font-size:19px}
+.sc-val{font-size:18px;font-weight:800;letter-spacing:-.025em;position:relative;z-index:1}
+.sc-ring{position:absolute;right:-2px;bottom:-2px;opacity:.16;pointer-events:none}
+.sc-dot{position:absolute;right:16px;top:-8px;opacity:.1;pointer-events:none}
+.sg{background:linear-gradient(135deg,#e6f4dd,#d2ebba)}.sg .sc-lbl,.sg .sc-val{color:#1a6428}
+.sb{background:linear-gradient(135deg,#ddeaf6,#c6dcf3)}.sb .sc-lbl,.sb .sc-val{color:#174b88}
+.sr{background:linear-gradient(135deg,#fae5e5,#f6d0d0)}.sr .sc-lbl,.sr .sc-val{color:#8f1a1a}
+.sa{background:linear-gradient(135deg,#fdf0da,#fce5b4)}.sa .sc-lbl,.sa .sc-val{color:#8e5a00}
+
+/* ── ALERT BOX ────────────────────────────────────────── */
+.alert-box{
+  background:linear-gradient(135deg,#fef0d8,#fce3ae);
+  border-radius:20px;padding:14px;
+  border:1px solid rgba(150,90,0,.1);
+}
+.alert-head{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:#8e5a00;margin-bottom:7px}
+.alert-item{font-size:11px;color:#6e4000;padding:3px 0;display:flex;align-items:center;gap:7px}
+.alert-item::before{content:'';width:4px;height:4px;border-radius:50%;background:#b87000;flex-shrink:0}
+
+/* ── SECTION HEAD ─────────────────────────────────────── */
+.sec-head{display:flex;justify-content:space-between;align-items:center}
+.sec-title{font-size:14px;font-weight:800;color:#111}
+.sec-link{font-size:11px;font-weight:700;color:#2a5a2a;background:none;border:none;cursor:pointer;padding:0}
+
+/* ── TRX CARD ─────────────────────────────────────────── */
+.trx-card{
+  background:#fff;border-radius:20px;padding:14px;
+  border:1px solid rgba(0,0,0,.055);
+  transition:transform .18s,box-shadow .18s;cursor:pointer;
+}
+.trx-card:active{transform:scale(.98);box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.trx-row{display:flex;justify-content:space-between;align-items:center}
+.trx-left{display:flex;align-items:center;gap:10px}
+.trx-av{
+  width:38px;height:38px;border-radius:12px;
+  background:#e5f5da;color:#2a5a2a;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:14px;flex-shrink:0;
+}
+.trx-name{font-size:13px;font-weight:700;color:#111}
+.trx-meta{font-size:11px;color:#9ca3af;margin-top:1px}
+.trx-amt{font-size:13px;font-weight:800;color:#111;text-align:right}
+.badge{font-size:10px;padding:2px 9px;border-radius:999px;font-weight:700;margin-top:3px;display:inline-block}
+.bt{background:#ddf3e4;color:#1a6428}
+.bk{background:#fef0da;color:#8e5a00}
+.trx-acts{display:flex;gap:7px;margin-top:10px;padding-top:10px;border-top:1px solid #f0f0f0}
+.bs{flex:1;padding:8px;border-radius:12px;font-size:12px;font-weight:700;border:none;cursor:pointer;transition:opacity .15s}
+.bs:active{opacity:.7}
+.b-gray{background:#f0ede8;color:#333}
+.b-red{background:#fce5e5;color:#8f1a1a}
+
+/* ── BTN GREEN FULL ────────────────────────────────────── */
+.bg-full{
+  width:100%;background:linear-gradient(135deg,#2a5a2a,#3a7a3a);
+  color:#fff;border:none;border-radius:14px;
+  padding:13px;font-size:13px;font-weight:700;
+  cursor:pointer;box-shadow:0 4px 14px rgba(42,90,42,.28);
+  transition:transform .15s,opacity .15s;display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.bg-full:active{transform:scale(.97);opacity:.9}
+
+/* ── STOCK CARD ───────────────────────────────────────── */
+.stk-card{
+  background:#fff;border-radius:20px;padding:14px;
+  border:1px solid rgba(0,0,0,.055);
+  display:flex;justify-content:space-between;align-items:center;
+  transition:transform .15s;
+}
+.stk-card:active{transform:scale(.98)}
+.stk-left{display:flex;align-items:center;gap:10px}
+.stk-ico{
+  width:38px;height:38px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;
+}
+.stk-ico.ok{background:#e5f5da}
+.stk-ico.krit{background:#fce5e5}
+.stk-name{font-size:13px;font-weight:700;color:#111}
+.stk-qty{font-size:11px;font-weight:600;margin-top:2px}
+.stk-qty.ok{color:#2a5a2a}
+.stk-qty.krit{color:#8f1a1a}
+
+/* ── ADD FORM ─────────────────────────────────────────── */
+.add-form{
+  background:#fff;border-radius:20px;padding:18px;
+  border:1.5px dashed #ccc;display:flex;flex-direction:column;gap:9px;
+}
+.add-form h4{font-size:13px;font-weight:700;color:#444}
+
+/* ── PROFILE CARD ─────────────────────────────────────── */
+.prof-card{
+  border-radius:22px;padding:18px;color:#fff;
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#182818,#2a4a2a);
+}
+.prof-row{display:flex;align-items:center;gap:14px;position:relative;z-index:1}
+.prof-av{
+  width:56px;height:56px;border-radius:18px;
+  background:rgba(255,255,255,.13);border:2px solid rgba(255,255,255,.18);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:17px;color:#fff;flex-shrink:0;
+}
+.prof-name{font-size:17px;font-weight:800}
+.prof-sub{font-size:11px;color:rgba(255,255,255,.55);margin-top:2px}
+.prof-badge{
+  display:inline-block;font-size:10px;padding:3px 9px;border-radius:999px;
+  background:rgba(126,200,74,.18);color:#7ec84a;font-weight:700;margin-top:5px;
+}
+
+/* ── INFO CARD ─────────────────────────────────────────── */
+.info-card{background:#fff;border-radius:20px;overflow:hidden;border:1px solid rgba(0,0,0,.055)}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:13px 14px}
+.info-row+.info-row{border-top:1px solid #f2f2f2}
+.info-lft{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600;color:#666}
+.info-lft span:first-child{font-size:15px}
+.info-val{font-size:13px;font-weight:700;color:#111}
+
+/* ── BOTTOM NAV ───────────────────────────────────────── */
+.bnav{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:430px;
+  background:rgba(255,255,255,.94);
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+  border-top:1px solid rgba(0,0,0,.07);
+  padding:8px 16px 20px;padding-bottom:calc(8px + env(safe-area-inset-bottom));
+  display:flex;justify-content:space-around;z-index:22;
+}
+.ni{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:none;border:none;cursor:pointer;padding:4px 10px;border-radius:14px;
+  min-width:56px;
+}
+.ni-ico{
+  width:30px;height:30px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:17px;
+  transition:background .18s;
+}
+.ni-lbl{font-size:9px;font-weight:700;color:#9ca3af;transition:color .18s}
+.ni.active .ni-ico{background:#ddf3e4}
+.ni.active .ni-lbl{color:#1a6428}
+
+/* ── SIDE MENU ─────────────────────────────────────────── */
+#ov{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.38);z-index:28;
+  -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+}
+#ov.open{display:block;animation:fadeIn .2s ease}
+#smenu{
+  position:fixed;top:0;left:-290px;width:272px;height:100%;
+  background:#fff;z-index:30;
+  box-shadow:6px 0 36px rgba(0,0,0,.14);
+  transition:left .28s cubic-bezier(.16,1,.3,1);
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  display:flex;flex-direction:column;
+}
+#smenu.open{left:0}
+.smenu-hdr{
+  padding:50px 18px 22px;
+  background:linear-gradient(135deg,#182818,#2a4a2a);
+  position:relative;overflow:hidden;flex-shrink:0;
+}
+.smenu-hdr-inner{display:flex;align-items:center;gap:11px;position:relative;z-index:1}
+.smenu-av{
+  width:46px;height:46px;border-radius:14px;
+  background:rgba(255,255,255,.13);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:15px;color:#fff;flex-shrink:0;
+}
+.smenu-name{font-weight:700;color:#fff;font-size:14px}
+.smenu-role{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px}
+.smenu-body{padding:12px;flex:1}
+.mi{
+  display:flex;align-items:center;gap:11px;
+  padding:11px 14px;border-radius:14px;cursor:pointer;
+  transition:background .15s;margin-bottom:1px;
+}
+.mi:active{background:#eef5e8}
+.mi.active{background:#ddf3e4}
+.mi-ico{font-size:17px}
+.mi-txt{font-size:13px;font-weight:600;color:#2a2a2a}
+.mi.active .mi-txt{color:#1a6428}
+.smenu-foot{padding:14px;flex-shrink:0}
+
+/* ── MODAL ─────────────────────────────────────────────── */
+#mOverlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.42);z-index:48;
+  -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
+  align-items:center;justify-content:center;padding:20px;
+}
+#mOverlay.open{display:flex;animation:fadeIn .2s ease}
+.mbox{
+  background:#fff;border-radius:24px;padding:18px;
+  width:100%;max-width:360px;
+  box-shadow:0 18px 50px rgba(0,0,0,.22);
+  animation:slideUp .28s cubic-bezier(.16,1,.3,1) both;
+}
+.m-av{
+  width:44px;height:44px;border-radius:14px;
+  background:#ddf3e4;color:#2a5a2a;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:17px;flex-shrink:0;
+}
+.m-detail{background:#f4f2ef;border-radius:14px;padding:14px;margin:14px 0;display:flex;flex-direction:column;gap:10px}
+.m-row{display:flex;justify-content:space-between;align-items:center}
+.m-key{font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em}
+.m-val{font-size:13px;font-weight:700;color:#111}
+.m-acts{display:flex;gap:8px}
+
+/* ── EMPTY ─────────────────────────────────────────────── */
+.empty{text-align:center;padding:50px 20px}
+.empty-ico{font-size:44px;margin-bottom:10px}
+.empty p{font-size:13px;color:#9ca3af}
+
+/* ── SCROLLBAR ─────────────────────────────────────────── */
+::-webkit-scrollbar{width:0;height:0}
+* {-webkit-overflow-scrolling:touch}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ════════ LOGIN ════════ -->
+<div id="pg-login" class="page active">
+  <div class="login-abs">
+    <svg width="100%" height="100%" viewBox="0 0 390 780" preserveAspectRatio="xMidYMid slice" style="position:absolute;top:0;left:0">
+      <g class="float-a" style="transform-origin:310px 80px"><circle cx="310" cy="80" r="110" fill="none" stroke="rgba(126,200,74,.12)" stroke-width="38"/></g>
+      <g class="float-b" style="transform-origin:28px 150px"><circle cx="28" cy="150" r="78" fill="rgba(80,150,80,.07)"/></g>
+      <g class="float-c" style="transform-origin:195px 200px">
+        <path d="M60,300 Q195,100 330,300" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="2"/>
+        <path d="M40,350 Q195,130 350,350" fill="none" stroke="rgba(255,255,255,.03)" stroke-width="1"/>
+      </g>
+      <g class="rot-slow" style="transform-origin:340px 220px"><polygon points="340,172 379,195 379,242 340,265 301,242 301,195" fill="none" stroke="rgba(126,200,74,.1)" stroke-width="1.5"/></g>
+      <circle cx="70" cy="60" r="4" fill="rgba(255,255,255,.11)" class="float-b"/>
+      <circle cx="330" cy="158" r="3" fill="rgba(126,200,74,.26)" class="float-a"/>
+      <circle cx="148" cy="28" r="2.5" fill="rgba(255,255,255,.14)" class="float-c"/>
+      <circle cx="50" cy="278" r="5" fill="rgba(126,200,74,.12)" class="float-b"/>
+      <line x1="0" y1="400" x2="390" y2="200" stroke="rgba(255,255,255,.025)" stroke-width="1"/>
+      <ellipse cx="48" cy="718" rx="118" ry="78" fill="rgba(58,125,58,.07)" class="float-a"/>
+      <ellipse cx="358" cy="756" rx="88" ry="58" fill="rgba(126,200,74,.05)" class="float-b"/>
+    </svg>
+  </div>
+  <div class="login-hero">
+    <div class="login-icon">🏪</div>
+    <h1 class="login-title">Warung Digital</h1>
+    <p class="login-tagline">Sistem Kasir Pintar untuk Warungmu</p>
+  </div>
+  <div class="login-card anim-up">
+    <h2>Selamat datang 👋</h2>
+    <p>Masuk untuk mulai kelola warungmu</p>
+    <label class="lbl">Email</label>
+    <input class="inp" type="email" id="inp-email" placeholder="nama@warung.com"/>
+    <label class="lbl">Password</label>
+    <input class="inp" type="password" id="inp-pass" placeholder="••••••••"/>
+    <button class="btn-main" id="btn-login">Masuk ke Akun →</button>
+    <div class="divider"><span>atau</span></div>
+    <button class="btn-outline">🌐 Masuk dengan Google</button>
+  </div>
+  <p class="login-foot">© 2026 Warung Digital</p>
+</div>
+
+<!-- ════════ DASHBOARD ════════ -->
+<div id="pg-dash" class="page">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-abs">
+      <svg width="100%" height="100%" viewBox="0 0 420 108" preserveAspectRatio="xMidYMid slice" style="position:absolute;top:0;left:0">
+        <g class="float-a" style="transform-origin:385px 18px"><circle cx="385" cy="18" r="68" fill="none" stroke="rgba(126,200,74,.14)" stroke-width="24"/></g>
+        <g class="float-b" style="transform-origin:28px 88px"><circle cx="28" cy="88" r="48" fill="rgba(80,150,80,.08)"/></g>
+        <g class="float-c" style="transform-origin:210px 54px"><path d="M130,108 Q210,10 290,108" fill="none" stroke="rgba(255,255,255,.04)" stroke-width="2"/></g>
+        <g class="rot-slow" style="transform-origin:370px 88px"><polygon points="370,64 391,77 391,103 370,116 349,103 349,77" fill="none" stroke="rgba(126,200,74,.11)" stroke-width="1"/></g>
+        <circle cx="100" cy="14" r="3" fill="rgba(255,255,255,.17)" class="float-b"/>
+        <circle cx="308" cy="9" r="2.5" fill="rgba(126,200,74,.28)" class="float-a"/>
+      </svg>
+    </div>
+    <div class="topbar-row">
+      <button class="tb-btn" id="btn-menu">☰</button>
+      <div class="tb-center">
+        <div class="tb-date" id="tb-date"></div>
+        <div class="tb-title" id="tb-title">Dashboard</div>
+      </div>
+      <button class="tb-btn tb-notif">🔔<span class="nb-dot"></span></button>
+    </div>
+  </div>
+
+  <!-- Subtle bg pattern (fixed, behind all content) -->
+  <svg style="position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;height:100%;opacity:.028;pointer-events:none;z-index:0" viewBox="0 0 420 844" preserveAspectRatio="xMidYMid slice">
+    <circle cx="350" cy="200" r="180" fill="none" stroke="#2d5a2d" stroke-width="55"/>
+    <circle cx="60" cy="500" r="140" fill="none" stroke="#2d5a2d" stroke-width="38"/>
+    <circle cx="380" cy="700" r="95" fill="#2d5a2d"/>
+    <polygon points="210,50 378,150 378,348 210,448 42,348 42,150" fill="none" stroke="#2d5a2d" stroke-width="2"/>
+    <line x1="0" y1="300" x2="420" y2="600" stroke="#2d5a2d" stroke-width="75"/>
+    <circle cx="100" cy="100" r="28" fill="#2d5a2d"/>
+  </svg>
+
+  <!-- HOME VIEW -->
+  <div id="vw-home" class="view active">
+    <div class="stat-grid anim-up" id="stat-grid"></div>
+    <div id="alert-box" class="anim-up1"></div>
+    <div class="anim-up2">
+      <div class="sec-head" style="margin-bottom:11px">
+        <span class="sec-title">Transaksi Terakhir</span>
+        <button class="sec-link" id="see-all-trx">Lihat semua →</button>
+      </div>
+      <div id="recent-list" style="display:flex;flex-direction:column;gap:9px"></div>
+      <button class="bg-full" id="btn-add-trx" style="margin-top:10px">＋ Tambah Transaksi</button>
+    </div>
+    <div style="height:4px"></div>
+  </div>
+
+  <!-- TRANSACTIONS VIEW -->
+  <div id="vw-transactions" class="view">
+    <div id="full-list" style="display:flex;flex-direction:column;gap:9px"></div>
+    <div style="height:4px"></div>
+  </div>
+
+  <!-- STOCK VIEW -->
+  <div id="vw-stock" class="view">
+    <div id="stock-list" style="display:flex;flex-direction:column;gap:9px"></div>
+    <div class="add-form anim-up1">
+      <h4>＋ Tambah Barang Baru</h4>
+      <input class="inp" id="ns-name" placeholder="Nama barang" style="margin-bottom:0"/>
+      <input class="inp" id="ns-qty" type="number" placeholder="Jumlah stok" style="margin-bottom:0"/>
+      <button class="bg-full" id="btn-add-stk">Tambah Barang</button>
+    </div>
+    <div style="height:4px"></div>
+  </div>
+
+  <!-- ACCOUNT VIEW -->
+  <div id="vw-account" class="view">
+    <div class="prof-card anim-up">
+      <svg style="position:absolute;right:-10px;top:-10px;opacity:.11;pointer-events:none" width="120" height="120" viewBox="0 0 120 120"><circle cx="95" cy="28" r="58" fill="none" stroke="rgba(126,200,74,1)" stroke-width="28"/></svg>
+      <svg style="position:absolute;left:-18px;bottom:-18px;opacity:.07;pointer-events:none" width="95" height="95" viewBox="0 0 95 95"><polygon points="47,4 90,24 90,71 47,91 4,71 4,24" fill="rgba(255,255,255,1)"/></svg>
+      <svg style="position:absolute;right:28px;bottom:8px;opacity:.09;pointer-events:none" width="46" height="46" viewBox="0 0 46 46"><circle cx="23" cy="23" r="19" fill="none" stroke="rgba(126,200,74,1)" stroke-width="1.5" stroke-dasharray="5 3"/></svg>
+      <div class="prof-row">
+        <div class="prof-av">Ty</div>
+        <div>
+          <div class="prof-name">Tyo</div>
+          <div class="prof-sub">Pemilik Warung · Jakarta</div>
+          <div class="prof-badge">✓ Aktif</div>
+        </div>
+      </div>
+    </div>
+    <div class="info-card anim-up1">
+      <div class="info-row"><div class="info-lft"><span>✉️</span><span>Email</span></div><span class="info-val">tyo@example.com</span></div>
+      <div class="info-row"><div class="info-lft"><span>👑</span><span>Role</span></div><span class="info-val">Pemilik</span></div>
+      <div class="info-row" id="acc-trx"><div class="info-lft"><span>🧾</span><span>Total Transaksi</span></div><span class="info-val">—</span></div>
+    </div>
+    <button class="bs b-red" style="width:100%;padding:13px;border-radius:14px;font-size:13px" id="btn-logout-acc">Keluar Akun</button>
+    <div style="height:4px"></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bnav">
+    <button class="ni active" data-v="home"><div class="ni-ico">🏠</div><span class="ni-lbl">Home</span></button>
+    <button class="ni" data-v="transactions"><div class="ni-ico">💳</div><span class="ni-lbl">Transaksi</span></button>
+    <button class="ni" data-v="stock"><div class="ni-ico">📦</div><span class="ni-lbl">Stok</span></button>
+    <button class="ni" data-v="account"><div class="ni-ico">👤</div><span class="ni-lbl">Akun</span></button>
+  </nav>
+</div><!-- /pg-dash -->
+
+<!-- ════════ SIDE MENU ════════ -->
+<div id="ov"></div>
+<div id="smenu">
+  <div class="smenu-hdr">
+    <svg style="position:absolute;right:-18px;top:-18px;opacity:.1;pointer-events:none" width="115" height="115" viewBox="0 0 115 115"><circle cx="88" cy="28" r="52" fill="none" stroke="rgba(126,200,74,1)" stroke-width="24"/></svg>
+    <svg style="position:absolute;left:0;bottom:-14px;opacity:.07;pointer-events:none" width="78" height="58" viewBox="0 0 78 58"><ellipse cx="18" cy="48" rx="58" ry="38" fill="rgba(126,200,74,1)"/></svg>
+    <div class="smenu-hdr-inner">
+      <div class="smenu-av">Ty</div>
+      <div><div class="smenu-name">Tyo</div><div class="smenu-role">Pemilik Warung</div></div>
+    </div>
+  </div>
+  <div class="smenu-body" id="smenu-body">
+    <div class="mi active" data-v="home"><span class="mi-ico">🏠</span><span class="mi-txt">Dashboard</span></div>
+    <div class="mi" data-v="transactions"><span class="mi-ico">💳</span><span class="mi-txt">Transaksi</span></div>
+    <div class="mi" data-v="stock"><span class="mi-ico">📦</span><span class="mi-txt">Stok Barang</span></div>
+    <div class="mi" data-v="transactions"><span class="mi-ico">📋</span><span class="mi-txt">Kasbon</span></div>
+    <div class="mi" data-v="stock"><span class="mi-ico">➕</span><span class="mi-txt">Input Barang</span></div>
+    <div class="mi" data-v="account"><span class="mi-ico">⚙️</span><span class="mi-txt">Pengaturan</span></div>
+  </div>
+  <div class="smenu-foot"><button class="bs b-red" style="width:100%;padding:13px;border-radius:14px;font-size:13px" id="btn-logout-menu">Keluar Akun</button></div>
+</div>
+
+<!-- ════════ MODAL ════════ -->
+<div id="mOverlay"><div class="mbox" id="mbox"></div></div>
+
+</div><!-- /app -->
+<script>
+// ── STORAGE ──────────────────────────────────────────────
+var S={
+  get:function(k,d){try{var r=localStorage.getItem(k);return r?JSON.parse(r):d}catch(e){return d}},
+  set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+};
+
+// ── STATE ─────────────────────────────────────────────────
+var isLogin=S.get('wd2_login',false);
+var curView=S.get('wd2_view','home');
+var TRX=S.get('wd2_trx',[
+  {id:1,name:'Zaidnudin',items:3,time:'14:32',total:35000,method:'Tunai',note:''},
+  {id:2,name:'Jeffry',items:5,time:'13:15',total:62500,method:'Kasbon',note:'Bayar minggu depan'},
+  {id:3,name:'Faridnudin',items:7,time:'11:20',total:88000,method:'Tunai',note:''}
+]);
+var STK=S.get('wd2_stk',[
+  {id:1,name:'Gula Pasir 1kg',qty:2},
+  {id:2,name:'Minyak Goreng 1L',qty:1},
+  {id:3,name:'Beras 5kg',qty:10}
+]);
+
+function saveTrx(){S.set('wd2_trx',TRX)}
+function saveStk(){S.set('wd2_stk',STK)}
+
+// ── HELPERS ───────────────────────────────────────────────
+function rp(n){return'Rp '+n.toLocaleString('id-ID')}
+function $id(id){return document.getElementById(id)}
+function today(){
+  return new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+function nowTime(){
+  return new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ── SCREENS ───────────────────────────────────────────────
+function showLogin(){
+  $id('pg-login').classList.add('active');
+  $id('pg-dash').classList.remove('active');
+}
+function showDash(){
+  $id('pg-login').classList.remove('active');
+  $id('pg-dash').classList.add('active');
+  $id('tb-date').textContent=today();
+  setView(curView);
+}
+
+// ── VIEW SWITCHER ─────────────────────────────────────────
+var viewTitles={home:'Dashboard',transactions:'Transaksi',stock:'Stok Barang',account:'Akun Saya'};
+var viewEls={home:'vw-home',transactions:'vw-transactions',stock:'vw-stock',account:'vw-account'};
+
+function setView(v){
+  curView=v;S.set('wd2_view',v);
+  Object.keys(viewEls).forEach(function(k){
+    var el=$id(viewEls[k]);
+    if(el){el.classList.toggle('active',k===v)}
+  });
+  $id('tb-title').textContent=viewTitles[v]||'Dashboard';
+  document.querySelectorAll('.ni').forEach(function(b){b.classList.toggle('active',b.dataset.v===v)});
+  document.querySelectorAll('#smenu-body .mi').forEach(function(m){m.classList.toggle('active',m.dataset.v===v)});
+  if(v==='home')renderHome();
+  if(v==='transactions')renderTrxFull();
+  if(v==='stock')renderStockFull();
+  if(v==='account')renderAccount();
+}
+
+// ── RENDER HOME ───────────────────────────────────────────
+function renderHome(){
+  var omzet=TRX.reduce(function(s,t){return s+(t.total||0)},0);
+  var kasbon=TRX.filter(function(t){return t.method==='Kasbon'}).reduce(function(s,t){return s+(t.total||0)},0);
+  var kritis=STK.filter(function(s){return s.qty<=2}).length;
+
+  $id('stat-grid').innerHTML=
+    sc('Omzet Hari Ini',rp(omzet),'💰','sg','#1a6428')+
+    sc('Transaksi',TRX.length+' trx','🧾','sb','#174b88')+
+    sc('Total Kasbon',rp(kasbon),'📋','sr','#8f1a1a')+
+    sc('Stok Kritis',kritis+' item','⚠️','sa','#8e5a00');
+
+  var aEl=$id('alert-box');
+  var kritArr=STK.filter(function(s){return s.qty<=2});
+  if(kritArr.length){
+    aEl.innerHTML='<div class="alert-box"><div class="alert-head">⚠️ Peringatan Stok</div>'+
+      kritArr.map(function(s){return'<div class="alert-item">'+s.name+' — tersisa '+s.qty+' unit</div>'}).join('')+
+      '</div>';
+    aEl.style.display='block';
+  } else {
+    aEl.innerHTML='';aEl.style.display='none';
+  }
+
+  var rEl=$id('recent-list');
+  rEl.innerHTML=TRX.slice(0,3).map(function(t){return trxHTML(t,false)}).join('');
+  rEl.querySelectorAll('.trx-card').forEach(function(c){
+    c.addEventListener('click',function(){openTrxModal(+c.dataset.id)});
+  });
+}
+
+function sc(lbl,val,ico,cls,clr){
+  return'<div class="sc '+cls+'">'+
+    '<div class="sc-top"><span class="sc-lbl">'+lbl+'</span><span class="sc-ico">'+ico+'</span></div>'+
+    '<div class="sc-val">'+val+'</div>'+
+    '<svg class="sc-ring" width="76" height="76" viewBox="0 0 76 76"><circle cx="62" cy="62" r="38" fill="none" stroke="'+clr+'" stroke-width="16"/></svg>'+
+    '<svg class="sc-dot" width="38" height="38" viewBox="0 0 38 38"><circle cx="19" cy="19" r="13" fill="'+clr+'"/></svg>'+
+    '</div>';
+}
+
+// ── RENDER TRX FULL ───────────────────────────────────────
+function renderTrxFull(){
+  var el=$id('full-list');
+  if(!TRX.length){
+    el.innerHTML='<div class="empty"><div class="empty-ico">🧾</div><p>Belum ada transaksi</p></div>';
+    return;
+  }
+  el.innerHTML=TRX.map(function(t){return trxHTML(t,true)}).join('');
+  el.querySelectorAll('.trx-card').forEach(function(c){
+    c.addEventListener('click',function(){openTrxModal(+c.dataset.id)});
+  });
+  el.querySelectorAll('.btn-dtl').forEach(function(b){
+    b.addEventListener('click',function(e){e.stopPropagation();openTrxModal(+b.dataset.id)});
+  });
+  el.querySelectorAll('.btn-hps').forEach(function(b){
+    b.addEventListener('click',function(e){e.stopPropagation();removeTrx(+b.dataset.id)});
+  });
+}
+
+function trxHTML(t,acts){
+  return'<div class="trx-card" data-id="'+t.id+'">'+
+    '<div class="trx-row">'+
+      '<div class="trx-left">'+
+        '<div class="trx-av">'+t.name[0]+'</div>'+
+        '<div><div class="trx-name">'+t.name+'</div><div class="trx-meta">'+t.items+' item · '+t.time+'</div></div>'+
+      '</div>'+
+      '<div style="text-align:right">'+
+        '<div class="trx-amt">'+rp(t.total)+'</div>'+
+        '<span class="badge '+(t.method==='Tunai'?'bt':'bk')+'">'+t.method+'</span>'+
+      '</div>'+
+    '</div>'+
+    (acts?'<div class="trx-acts">'+
+      '<button class="bs b-gray btn-dtl" data-id="'+t.id+'">Detail</button>'+
+      '<button class="bs b-red btn-hps" data-id="'+t.id+'">Hapus</button>'+
+      '</div>':'')+
+  '</div>';
+}
+
+// ── RENDER STOCK ──────────────────────────────────────────
+function renderStockFull(){
+  var el=$id('stock-list');
+  el.innerHTML=STK.map(function(s){
+    var ok=s.qty>2;
+    return'<div class="stk-card" data-id="'+s.id+'">'+
+      '<div class="stk-left">'+
+        '<div class="stk-ico '+(ok?'ok':'krit')+'">'+(ok?'📦':'⚠️')+'</div>'+
+        '<div><div class="stk-name">'+s.name+'</div>'+
+        '<div class="stk-qty '+(ok?'ok':'krit')+'">Stok: '+s.qty+' unit'+(ok?'':' • Kritis!')+'</div></div>'+
+      '</div>'+
+      '<button class="bs b-gray btn-edit-stk" data-id="'+s.id+'" style="padding:8px 14px">Edit</button>'+
+    '</div>';
+  }).join('');
+  el.querySelectorAll('.btn-edit-stk').forEach(function(b){
+    b.addEventListener('click',function(){openEditStk(+b.dataset.id)});
+  });
+}
+
+// ── RENDER ACCOUNT ────────────────────────────────────────
+function renderAccount(){
+  var el=$id('acc-trx').querySelector('.info-val');
+  if(el) el.textContent=TRX.length+' transaksi';
+}
+
+// ── CRUD TRX ──────────────────────────────────────────────
+function addTrx(payload){
+  TRX.unshift({id:Date.now(),time:nowTime(),name:payload.name||'Pelanggan',items:payload.items||1,total:payload.total||0,method:payload.method||'Tunai',note:payload.note||''});
+  saveTrx();setView('transactions');
+}
+function removeTrx(id){
+  TRX=TRX.filter(function(t){return t.id!==id});
+  saveTrx();closeModal();
+  if(curView==='transactions')renderTrxFull();
+  if(curView==='home')renderHome();
+}
+
+// ── CRUD STK ──────────────────────────────────────────────
+function updateStkQty(id,qty){
+  STK=STK.map(function(s){return s.id===id?Object.assign({},s,{qty:qty}):s});
+  saveStk();closeModal();renderStockFull();
+}
+function addStk(name,qty){
+  STK.unshift({id:Date.now(),name:name,qty:qty});
+  saveStk();renderStockFull();
+}
+
+// ── MODAL ─────────────────────────────────────────────────
+function openModal(html){
+  $id('mbox').innerHTML=html;
+  $id('mOverlay').classList.add('open');
+}
+function closeModal(){$id('mOverlay').classList.remove('open')}
+$id('mOverlay').addEventListener('click',function(e){if(e.target===this)closeModal()});
+
+function openTrxModal(id){
+  var t=TRX.filter(function(x){return x.id===id})[0];
+  if(!t)return;
+  openModal(
+    '<div style="display:flex;align-items:center;gap:11px;margin-bottom:14px">'+
+      '<div class="m-av">'+t.name[0]+'</div>'+
+      '<div><div style="font-size:15px;font-weight:800;color:#111">'+t.name+'</div>'+
+      '<div style="font-size:11px;color:#9ca3af;margin-top:2px">'+t.time+' · '+t.items+' item</div></div>'+
+    '</div>'+
+    '<div class="m-detail">'+
+      '<div class="m-row"><span class="m-key">Total Bayar</span><span class="m-val">'+rp(t.total)+'</span></div>'+
+      '<div class="m-row"><span class="m-key">Metode</span><span class="m-val">'+t.method+'</span></div>'+
+      '<div class="m-row"><span class="m-key">Catatan</span><span class="m-val">'+(t.note||'—')+'</span></div>'+
+    '</div>'+
+    '<div class="m-acts">'+
+      '<button class="bs b-red" style="padding:12px" onclick="removeTrx('+t.id+')">Hapus</button>'+
+      '<button class="bs b-gray" style="padding:12px" onclick="closeModal()">Tutup</button>'+
+    '</div>'
+  );
+}
+
+function openEditStk(id){
+  var s=STK.filter(function(x){return x.id===id})[0];
+  if(!s)return;
+  openModal(
+    '<div style="font-size:15px;font-weight:800;color:#111;margin-bottom:3px">Edit Stok</div>'+
+    '<div style="font-size:12px;color:#9ca3af;margin-bottom:14px">'+s.name+'</div>'+
+    '<div style="display:flex;gap:9px">'+
+      '<input id="m-qty" type="number" value="'+s.qty+'" class="inp" style="flex:1;margin-bottom:0"/>'+
+      '<button class="btn-main" style="width:auto;padding:12px 18px;font-size:13px" onclick="'+
+        'var v=parseInt(document.getElementById(\'m-qty\').value||0,10);'+
+        'updateStkQty('+s.id+',isNaN(v)?0:v)">Simpan</button>'+
+    '</div>'
+  );
+}
+
+// ── SIDE MENU ─────────────────────────────────────────────
+function openMenu(){$id('ov').classList.add('open');$id('smenu').classList.add('open')}
+function closeMenu(){$id('ov').classList.remove('open');$id('smenu').classList.remove('open')}
+$id('btn-menu').addEventListener('click',openMenu);
+$id('ov').addEventListener('click',closeMenu);
+document.querySelectorAll('#smenu-body .mi').forEach(function(m){
+  m.addEventListener('click',function(){setView(m.dataset.v);closeMenu()});
+});
+
+// ── NAV ───────────────────────────────────────────────────
+document.querySelectorAll('.ni').forEach(function(b){
+  b.addEventListener('click',function(){setView(b.dataset.v)});
+});
+
+// ── LOGIN / LOGOUT ────────────────────────────────────────
+$id('btn-login').addEventListener('click',function(){
+  S.set('wd2_login',true);isLogin=true;showDash();
+});
+function logout(){
+  S.set('wd2_login',false);isLogin=false;closeMenu();showLogin();
+}
+$id('btn-logout-menu').addEventListener('click',logout);
+$id('btn-logout-acc').addEventListener('click',logout);
+
+// ── ADD TRX ───────────────────────────────────────────────
+$id('btn-add-trx').addEventListener('click',function(){
+  addTrx({name:'Pelanggan Baru',items:2,total:25000,method:'Tunai',note:'Transaksi cepat'});
+});
+$id('see-all-trx').addEventListener('click',function(){setView('transactions')});
+
+// ── ADD STOCK ─────────────────────────────────────────────
+$id('btn-add-stk').addEventListener('click',function(){
+  var name=$id('ns-name').value.trim();
+  var qty=parseInt($id('ns-qty').value||0,10);
+  if(!name){alert('Masukkan nama barang');return}
+  addStk(name,isNaN(qty)?0:qty);
+  $id('ns-name').value='';$id('ns-qty').value='';
+});
+
+// ── INIT ──────────────────────────────────────────────────
+if(isLogin){showDash()}else{showLogin()}
+</script>
+</body>
+</html>
