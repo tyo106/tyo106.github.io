@@ -510,11 +510,41 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
     <div style="height:4px"></div>
   </div>
 
+
+  <!-- REPORT VIEW -->
+  <div id="vw-report" class="view">
+    <div class="stat-grid anim-up" id="report-stats"></div>
+
+    <div class="info-card anim-up1">
+      <div class="info-row">
+        <div class="info-lft"><span>💰</span><span>Total Pendapatan Tunai</span></div>
+        <span class="info-val" id="r-tunai">Rp 0</span>
+      </div>
+      <div class="info-row">
+        <div class="info-lft"><span>📋</span><span>Total Piutang Kasbon</span></div>
+        <span class="info-val" id="r-kasbon">Rp 0</span>
+      </div>
+      <div class="info-row">
+        <div class="info-lft"><span>🧾</span><span>Total Seluruh Transaksi</span></div>
+        <span class="info-val" id="r-total">Rp 0</span>
+      </div>
+      <div class="info-row">
+        <div class="info-lft"><span>📦</span><span>Jumlah Transaksi</span></div>
+        <span class="info-val" id="r-count">0 transaksi</span>
+      </div>
+    </div>
+
+    <button class="bg-full anim-up2" id="btn-export-report">📄 Export Ringkasan</button>
+    <div style="height:4px"></div>
+  </div>
+
+
   <!-- BOTTOM NAV -->
   <nav class="bnav">
     <button class="ni active" data-v="home"><div class="ni-ico">🏠</div><span class="ni-lbl">Home</span></button>
     <button class="ni" data-v="transactions"><div class="ni-ico">💳</div><span class="ni-lbl">Transaksi</span></button>
     <button class="ni" data-v="stock"><div class="ni-ico">📦</div><span class="ni-lbl">Stok</span></button>
+    <button class="ni" data-v="report"><div class="ni-ico">📊</div><span class="ni-lbl">Laporan</span></button>
     <button class="ni" data-v="account"><div class="ni-ico">👤</div><span class="ni-lbl">Akun</span></button>
   </nav>
 </div><!-- /pg-dash -->
@@ -536,6 +566,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
     <div class="mi" data-v="stock"><span class="mi-ico">📦</span><span class="mi-txt">Stok Barang</span></div>
     <div class="mi" data-v="transactions"><span class="mi-ico">📋</span><span class="mi-txt">Kasbon</span></div>
     <div class="mi" data-v="stock"><span class="mi-ico">➕</span><span class="mi-txt">Input Barang</span></div>
+    <div class="mi" data-v="report"><span class="mi-ico">📊</span><span class="mi-txt">Laporan Keuangan</span></div>
     <div class="mi" data-v="account"><span class="mi-ico">⚙️</span><span class="mi-txt">Pengaturan</span></div>
   </div>
   <div class="smenu-foot"><button class="bs b-red" style="width:100%;padding:13px;border-radius:14px;font-size:13px" id="btn-logout-menu">Keluar Akun</button></div>
@@ -592,8 +623,8 @@ function showDash(){
 }
 
 // ── VIEW SWITCHER ─────────────────────────────────────────
-var viewTitles={home:'Dashboard',transactions:'Transaksi',stock:'Stok Barang',account:'Akun Saya'};
-var viewEls={home:'vw-home',transactions:'vw-transactions',stock:'vw-stock',account:'vw-account'};
+var viewTitles={home:'Dashboard',transactions:'Transaksi',stock:'Stok Barang',report:'Laporan Keuangan',account:'Akun Saya'};
+var viewEls={home:'vw-home',transactions:'vw-transactions',stock:'vw-stock',report:'vw-report',account:'vw-account'};
 
 function setView(v){
   curView=v;S.set('wd2_view',v);
@@ -607,6 +638,7 @@ function setView(v){
   if(v==='home')renderHome();
   if(v==='transactions')renderTrxFull();
   if(v==='stock')renderStockFull();
+  if(v==='report')renderReport();
   if(v==='account')renderAccount();
 }
 
@@ -704,6 +736,31 @@ function renderStockFull(){
   el.querySelectorAll('.btn-edit-stk').forEach(function(b){
     b.addEventListener('click',function(){openEditStk(+b.dataset.id)});
   });
+}
+
+
+// ── RENDER REPORT ────────────────────────────────────────
+function renderReport(){
+  var total = TRX.reduce(function(s,t){return s + (t.total || 0)}, 0);
+  var tunai = TRX.filter(function(t){return t.method === 'Tunai';})
+                 .reduce(function(s,t){return s + (t.total || 0)}, 0);
+  var kasbon = TRX.filter(function(t){return t.method === 'Kasbon';})
+                  .reduce(function(s,t){return s + (t.total || 0)}, 0);
+  var rata = TRX.length ? Math.round(total / TRX.length) : 0;
+
+  var box = $id('report-stats');
+  if(box){
+    box.innerHTML =
+      sc('Pendapatan Tunai', rp(tunai), '💵', 'sg', '#1a6428') +
+      sc('Piutang Kasbon', rp(kasbon), '📋', 'sr', '#8f1a1a') +
+      sc('Total Omzet', rp(total), '💰', 'sb', '#174b88') +
+      sc('Rata-rata/Trx', rp(rata), '📈', 'sa', '#8e5a00');
+  }
+
+  if($id('r-tunai')) $id('r-tunai').textContent = rp(tunai);
+  if($id('r-kasbon')) $id('r-kasbon').textContent = rp(kasbon);
+  if($id('r-total')) $id('r-total').textContent = rp(total);
+  if($id('r-count')) $id('r-count').textContent = TRX.length + ' transaksi';
 }
 
 // ── RENDER ACCOUNT ────────────────────────────────────────
@@ -816,6 +873,29 @@ $id('btn-add-stk').addEventListener('click',function(){
   addStk(name,isNaN(qty)?0:qty);
   $id('ns-name').value='';$id('ns-qty').value='';
 });
+
+
+// ── EXPORT REPORT ────────────────────────────────────────
+var exportBtn = $id('btn-export-report');
+if(exportBtn){
+  exportBtn.addEventListener('click', function(){
+    var total = TRX.reduce(function(s,t){return s + (t.total || 0)}, 0);
+    var tunai = TRX.filter(function(t){return t.method === 'Tunai';})
+                   .reduce(function(s,t){return s + (t.total || 0)}, 0);
+    var kasbon = TRX.filter(function(t){return t.method === 'Kasbon';})
+                    .reduce(function(s,t){return s + (t.total || 0)}, 0);
+
+    var text =
+      'LAPORAN KEUANGAN WARUNG DIGITAL\n\n' +
+      'Tanggal: ' + today() + '\n' +
+      'Jumlah Transaksi: ' + TRX.length + '\n' +
+      'Pendapatan Tunai: ' + rp(tunai) + '\n' +
+      'Piutang Kasbon: ' + rp(kasbon) + '\n' +
+      'Total Omzet: ' + rp(total);
+
+    alert(text);
+  });
+}
 
 // ── INIT ──────────────────────────────────────────────────
 if(isLogin){showDash()}else{showLogin()}
