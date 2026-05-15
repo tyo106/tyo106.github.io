@@ -612,19 +612,28 @@ setView(curView);
 var viewTitles={home:'Dashboard',transactions:'Transaksi',stock:'Stok Barang',report:'Laporan Keuangan',account:'Akun Saya'};
 var viewEls={home:'vw-home',transactions:'vw-transactions',stock:'vw-stock',report:'vw-report',account:'vw-account'};
 function setView(v){
-curView=v;S.set('wd2_view',v);
-Object.keys(viewEls).forEach(function(k){
-var el=$id(viewEls[k]);
-if(el){el.classList.toggle('active',k===v)}
-});
-$id('tb-title').textContent=viewTitles[v]||'Dashboard';
-document.querySelectorAll('.ni').forEach(function(b){b.classList.toggle('active',b.dataset.v===v)});
-document.querySelectorAll('#smenu-body .mi').forEach(function(m){m.classList.toggle('active',m.dataset.v===v)});
-if(v==='home')renderHome();
-if(v==='transactions')renderTrxFull();
-if(v==='stock')renderStockFull();
-if(v==='report')renderReport();
-if(v==='account')renderAccount();
+  curView=v;S.set('wd2_view',v);
+  
+  Object.keys(viewEls).forEach(function(k){
+    var el=$id(viewEls[k]);
+    if(el){el.classList.toggle('active',k===v)}
+  });
+  
+  $id('tb-title').textContent=viewTitles[v]||'Dashboard';
+  
+  // Update Bottom Nav
+  document.querySelectorAll('.ni').forEach(function(b){b.classList.toggle('active',b.dataset.v===v)});
+  
+  // FIX MARKER DOBEL: Hapus semua active di Side Menu, lalu aktifkan yang pertama saja
+  document.querySelectorAll('#smenu-body .mi').forEach(function(m){ m.classList.remove('active'); });
+  var activeMenu = document.querySelector('#smenu-body .mi[data-v="' + v + '"]');
+  if(activeMenu) activeMenu.classList.add('active');
+
+  if(v==='home')renderHome();
+  if(v==='transactions')renderTrxFull();
+  if(v==='stock')renderStockFull();
+  if(v==='report')renderReport();
+  if(v==='account')renderAccount();
 }
 // ── RENDER HOME ───────────────────────────────────────────
 function renderHome(){
