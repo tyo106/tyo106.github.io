@@ -480,8 +480,9 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
     <div class="add-form anim-up1">
       <h4>＋ Tambah Barang Baru</h4>
       <input class="inp" id="ns-name" placeholder="Nama barang" style="margin-bottom:0"/>
-      <input class="inp" id="ns-qty" type="number" placeholder="Jumlah stok" style="margin-bottom:0"/>
-      <button class="bg-full" id="btn-add-stk">Tambah Barang</button>
+  <input class="inp" id="ns-qty" type="number" placeholder="Jumlah stok" style="margin-bottom:0"/>
+  <input class="inp" id="ns-harga" type="number" placeholder="Harga satuan (Rp)" style="margin-bottom:0"/>
+  <button class="bg-full" id="btn-add-stk">Tambah Barang</button>
     </div>
     <div style="height:4px"></div>
   </div>
@@ -804,8 +805,8 @@ function updateStkQty(id,qty){
   STK=STK.map(function(s){return s.id===id?Object.assign({},s,{qty:qty}):s});
   saveStk();closeModal();renderStockFull();
 }
-function addStk(name,qty){
-  STK.unshift({id:Date.now(),name:name,qty:qty});
+function addStk(name,qty,harga){   harga = harga || 0;
+  STK.unshift({id:Date.now(),name:name,qty:qty,harga:harga});
   saveStk();renderStockFull();
 }
 
@@ -989,7 +990,9 @@ $id('btn-add-stk').addEventListener('click',function(){
   var name=$id('ns-name').value.trim();
   var qty=parseInt($id('ns-qty').value||0,10);
   if(!name){alert('Masukkan nama barang');return}
-  addStk(name,isNaN(qty)?0:qty);
+var harga=parseInt($id('ns-harga').value||0);
+addStk(name,isNaN(qty)?0:qty,harga);
+$id('ns-harga').value='';
   $id('ns-name').value='';$id('ns-qty').value='';
 });
 
