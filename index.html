@@ -7,6 +7,25 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <title>Warung Digital</title>
+
+<!-- ✅ FIX: Firebase SDK dipindah ke sini (sebelum script utama) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script>
+  firebase.initializeApp({
+    apiKey: "AIzaSyA6gNuDN01l0V6Q6iXNM-3otPZiygTMNNw",
+    authDomain: "warung-digital-8fb7b.firebaseapp.com",
+    projectId: "warung-digital-8fb7b",
+    storageBucket: "warung-digital-8fb7b.firebasestorage.app",
+    messagingSenderId: "280805109617",
+    appId: "1:280805109617:web:74adc9dc0e7501453e50d0"
+  });
+  window.db = firebase.firestore();
+  window.auth = firebase.auth();
+  console.log("✅ Firebase Warung Digital siap!");
+</script>
+
 <style>
 /* ── RESET & BASE ─────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -415,7 +434,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
     <div class="divider"><span>atau</span></div>
     <button class="btn-outline" onclick="loginGoogle()">🌐 Masuk dengan Google</button>
   </div>
-  <p class="login-foot">© 2026 Warung Digital</p>
+  <p class="login-foot">©️ 2026 Warung Digital</p>
 </div>
 
 <!-- ════════ DASHBOARD ════════ -->
@@ -624,13 +643,13 @@ function showLogin(){
   $id('pg-dash').classList.remove('active');
 }
 function showDash(){
-    var user = firebase.auth().currentUser;
+  var user = firebase.auth().currentUser;
   if(user){
     var nama = user.displayName || 'User';
     var inisial = nama.charAt(0).toUpperCase();
     var el = document.getElementById('prof-av');
     if(el) el.textContent = inisial;
-var el2 = document.getElementById('prof-name');
+    var el2 = document.getElementById('prof-name');
     if(el2) el2.textContent = nama;
     var sm = document.getElementById('smenu-name');
     if(sm) sm.textContent = nama;
@@ -1002,9 +1021,9 @@ $id('btn-add-stk').addEventListener('click',function(){
   var name=$id('ns-name').value.trim();
   var qty=parseInt($id('ns-qty').value||0,10);
   if(!name){alert('Masukkan nama barang');return}
-var harga=parseInt($id('ns-harga').value||0);
-addStk(name,isNaN(qty)?0:qty,harga);
-$id('ns-harga').value='';
+  var harga=parseInt($id('ns-harga').value||0);
+  addStk(name,isNaN(qty)?0:qty,harga);
+  $id('ns-harga').value='';
   $id('ns-name').value='';$id('ns-qty').value='';
 });
 
@@ -1031,14 +1050,12 @@ if(exportBtn){
   });
 }
 
-// ── INIT ──────────────────────────────────────────────────
-  // LOGIN GOOGLE FIREBASE
+// ── LOGIN GOOGLE FIREBASE ─────────────────────────────────
 function loginGoogle(){
   var provider = new firebase.auth.GoogleAuthProvider();
   firebase.auth().signInWithPopup(provider).then(function(result){
     var user = result.user;
-window.currentUser = user;
-    // Update profil dari Google ke localStorage
+    window.currentUser = user;
     localStorage.setItem('wd2_login', JSON.stringify({
       nama: user.displayName,
       email: user.email,
@@ -1051,30 +1068,18 @@ window.currentUser = user;
   });
 }
 
+// ── INIT — ✅ FIX: flag _authReady cegah render dobel ─────
+var _authReady = false;
 firebase.auth().onAuthStateChanged(function(user){
-  if(user){ 
+  if(_authReady) return;
+  _authReady = true;
+  if(user){
     window.currentUser = user;
     showDash();
   } else {
     showLogin();
   }
 });
-</script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script>
-  firebase.initializeApp({
-    apiKey: "AIzaSyA6gNuDN01l0V6Q6iXNM-3otPZiygTMNNw",
-    authDomain: "warung-digital-8fb7b.firebaseapp.com",
-    projectId: "warung-digital-8fb7b",
-    storageBucket: "warung-digital-8fb7b.firebasestorage.app",
-    messagingSenderId: "280805109617",
-    appId: "1:280805109617:web:74adc9dc0e7501453e50d0"
-  });
-  window.db = firebase.firestore();
-  window.auth = firebase.auth();
-  console.log("✅ Firebase Warung Digital siap!");
 </script>
 </body>
 </html>
