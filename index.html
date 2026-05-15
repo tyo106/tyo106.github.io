@@ -8,18 +8,27 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <title>Warung Digital</title>
 
-<!-- ✅ FIX: Firebase SDK dipindah ke sini (sebelum script utama) -->
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
 <script>
-  firebase.initializeApp({
-    apiKey: "...",
-    ...
-  });
-  window.db = firebase.firestore();
-  window.auth = firebase.auth();
-  console.log("✅ Firebase Warung Digital siap!");
+const firebaseConfig = {
+  apiKey: "AIzaSyA6gNuDN01l0V6Q6iXNM-3otPZiygTMNNw",
+  authDomain: "warung-digital-8fb7b.firebaseapp.com",
+  projectId: "warung-digital-8fb7b",
+  storageBucket: "warung-digital-8fb7b.firebasestorage.app",
+  messagingSenderId: "280805109617",
+  appId: "1:280805109617:web:74adc9dc0e7501453e50d0"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+window.auth = firebase.auth();
+window.db = firebase.firestore();
+
+console.log("✅ Firebase Warung Digital siap!");
 </script>
 
 <style>
