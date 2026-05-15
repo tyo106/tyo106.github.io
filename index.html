@@ -580,7 +580,14 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 // ── STORAGE ──────────────────────────────────────────────
 var S={
   get:function(k,d){try{var r=localStorage.getItem(k);return r?JSON.parse(r):d}catch(e){return d}},
-  set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+  set:function(k,v){
+    try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}
+    // Sync ke Firebase jika user login
+    var uid = firebase.auth().currentUser?.uid;
+    if(uid && window.db){
+      window.db.collection('users').doc(uid).collection(k).doc('data').set({value:v});
+    }
+  }
 };
 
 // ── STATE ─────────────────────────────────────────────────
