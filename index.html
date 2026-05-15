@@ -493,16 +493,16 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
       <svg style="position:absolute;left:-18px;bottom:-18px;opacity:.07;pointer-events:none" width="95" height="95" viewBox="0 0 95 95"><polygon points="47,4 90,24 90,71 47,91 4,71 4,24" fill="rgba(255,255,255,1)"/></svg>
       <svg style="position:absolute;right:28px;bottom:8px;opacity:.09;pointer-events:none" width="46" height="46" viewBox="0 0 46 46"><circle cx="23" cy="23" r="19" fill="none" stroke="rgba(126,200,74,1)" stroke-width="1.5" stroke-dasharray="5 3"/></svg>
       <div class="prof-row">
-        <div class="prof-av">Ty</div>
+        <div class="prof-av" id="prof-av">Ty</div>
         <div>
-          <div class="prof-name">Tyo</div>
+          <div class="prof-name" id="prof-name">Tyo</div>
           <div class="prof-sub">Pemilik Warung · Jakarta</div>
           <div class="prof-badge">✓ Aktif</div>
         </div>
       </div>
     </div>
     <div class="info-card anim-up1">
-      <div class="info-row"><div class="info-lft"><span>✉️</span><span>Email</span></div><span class="info-val">tyo@example.com</span></div>
+      <div class="info-row"><div class="info-lft"><span>✉️</span><span>Email</span></div><span class="info-val"><span id="prof-email">tyo@example.com</span></span></div>
       <div class="info-row"><div class="info-lft"><span>👑</span><span>Role</span></div><span class="info-val">Pemilik</span></div>
       <div class="info-row" id="acc-trx"><div class="info-lft"><span>🧾</span><span>Total Transaksi</span></div><span class="info-val">—</span></div>
     </div>
@@ -616,6 +616,17 @@ function showLogin(){
   $id('pg-dash').classList.remove('active');
 }
 function showDash(){
+    var user = firebase.auth().currentUser;
+  if(user){
+    var nama = user.displayName || 'User';
+    var inisial = nama.charAt(0).toUpperCase();
+    var el = document.getElementById('prof-av');
+    if(el) el.textContent = inisial;
+    var el2 = document.getElementById('prof-name');
+    if(el2) el2.textContent = nama;
+    var el3 = document.getElementById('prof-email');
+    if(el3) el3.textContent = user.email;
+  }
   $id('pg-login').classList.remove('active');
   $id('pg-dash').classList.add('active');
   $id('tb-date').textContent=today();
