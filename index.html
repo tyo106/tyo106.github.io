@@ -879,8 +879,109 @@ $id('btn-logout-acc').addEventListener('click',logout);
 
 // ── ADD TRX ───────────────────────────────────────────────
 $id('btn-add-trx').addEventListener('click',function(){
-  addTrx({name:'Pelanggan Baru',items:2,total:25000,method:'Tunai',note:'Transaksi cepat'});
+  openModalTrx();
 });
+
+function openModalTrx(){
+  var stk = STK;
+  var cart = [];
+  var html = '<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:flex-end;justify-content:center" id="modal-trx">';
+  html += '<div style="background:#fff;width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:20px;max-height:90vh;overflow-y:auto">';
+  html += '<h3 style="margin:0 0 15px;font-size:16px">🛒 Tambah Transaksi</h3>';
+  html += '<input id="trx-name" class="inp" placeholder="Nama pelanggan" style="margin-bottom:10px"/>';
+  html += '<p style="font-size:13px;font-weight:600;margin:0 0 8px">Pilih Barang:</p>';
+  html += '<div id="trx-stk-list" style="display:flex;flex-direction:column;gap:6px">';
+  stk.forEach(function(s,i){
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;background:#f5f5f5;padding:8px 12px;border-radius:10px">';
+    html += '<span style="font-size:13px">'+s.name+'</span>';
+    html += '<div style="display:flex;align-items:center;gap:8px">';
+    html += '<span style="font-size:12px;color:#888">Stok: '+s.qty+'</span>';
+    html += '<button onclick="addToCart('+i+')" style="background:#2d6a4f;color:#fff;border:none;border-radius:8px;padding:4px 12px;font-size:13px">+</button>';
+    html += '</div></div>';
+  });
+  html += '</div>';
+  html += '<div id="trx-cart" style="margin-top:12px;min-height:30px"></div>';
+  html += '<p style="font-size:13px;font-weight:600;margin:10px 0 6px">Metode Bayar:</p>';
+  html += '<div style="display:flex;gap:8px;margin-bottom:12px">';
+  html += '<button onclick="setMethod(\'Tunai\')" id="m-tunai" style="flex:1;padding:8px;border-radius:10px;border:2px solid #2d6a4f;background:#2d6a4f;color:#fff;font-size:13px">Tunai</button>';
+  html += '<button onclick="setMethod(\'Transfer\')" id="m-transfer" style="flex:1;padding:8px;border-radius:10px;border:2px solid #ddd;background:#fff;color:#333;font-size:13px">Transfer</button>';
+  html += '<button onclick="setMethod(\'Kasbon\')" id="m-kasbon" style="flex:1;padding:8px;border-radius:10px;border:2px solid #ddd;background:#fff;color:#333;font-size:13px">Kasbon</button>';
+  html += '</div>';
+  html += '<div id="trx-total" style="font-size:15px;font-weight:700;margin-bottom:12px;color:#2d6a4f">Total: Rp 0</div>';
+  html += '<button onclick="saveTrxModal()" style="width:100%;padding:13px;background:#2d6a4f;color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:600">💾 Simpan Transaksi</button>';
+  html += '<button onclick="closeModalTrx()" style="width:100%;padding:10px;background:none;border:none;color:#e63946;font-size:13px;margin-top:8px">Batal</button>';
+  html += '</div></div>';
+  document.body.insertAdjacentHTML('beforeend', html);
+  window._trxCart = [];
+  window._trxMethod = 'Tunai';
+}
+
+function addToCart(idx){
+  var s = STK[idx];
+  if(!window._trxCart) window._trxCart = [];
+  var found = window._trxCart.find(function(c){return c.idx===idx;});
+  if(found){ found.qty++; }
+  else { window._trxCart.push({idx:idx, name:s.name, qty:1, harga:s.harga||0}); }
+  renderCart();
+}
+
+function renderCart(){
+  var cart = window._trxCart || [];
+  var total = 0;
+  var html = '';
+  if(cart.length > 0){
+    html += '<p style="font-size:12px;font-weight:600;color:#555;margin:0 0 6px">Keranjang:</p>';
+    cart.forEach(function(c,i){
+      var sub = c.qty * c.harga;
+      total += sub;
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;background:#e8f5e9;padding:6px 10px;border-radius:8px;margin-bottom:4px">';
+      html += '<span style="font-size:12px">'+c.name+' x'+c.qty+'</span>';
+      html += '<div style="display:flex;gap:6px;align-items:center">';
+      if(c.harga > 0) html += '<span style="font-size:12px;color:#2d6a4f">Rp '+c.harga.toLocaleString('id')+'</span>';
+      html += '<button onclick="removeFromCart('+i+')" style="background:#e63946;color:#fff;border:none;border-radius:6px;padding:2px 8px;font-size:12px">-</button>';
+      html += '</div></div>';
+    });
+  }
+  var el = document.getElementById('trx-cart');
+  if(el) el.innerHTML = html;
+  var telEl = document.getElementById('trx-total');
+  if(telEl) telEl.textContent = 'Total: Rp ' + total.toLocaleString('id');
+  window._trxTotal = total;
+}
+
+function removeFromCart(i){
+  if(window._trxCart[i].qty > 1){ window._trxCart[i].qty--; }
+  else { window._trxCart.splice(i,1); }
+  renderCart();
+}
+
+function setMethod(m){
+  window._trxMethod = m;
+  ['Tunai','Transfer','Kasbon'].forEach(function(x){
+    var btn = document.getElementById('m-'+x.toLowerCase());
+    if(btn){
+      btn.style.background = x===m ? '#2d6a4f' : '#fff';
+      btn.style.color = x===m ? '#fff' : '#333';
+      btn.style.borderColor = x===m ? '#2d6a4f' : '#ddd';
+    }
+  });
+}
+
+function saveTrxModal(){
+  var name = document.getElementById('trx-name').value.trim() || 'Pelanggan';
+  var cart = window._trxCart || [];
+  if(cart.length === 0){ alert('Pilih barang dulu!'); return; }
+  var items = cart.reduce(function(s,c){return s+c.qty;},0);
+  var total = window._trxTotal || 0;
+  var barang = cart.map(function(c){return c.name+' x'+c.qty;}).join(', ');
+  addTrx({name:name, items:items, total:total, method:window._trxMethod||'Tunai', note:barang});
+  closeModalTrx();
+}
+
+function closeModalTrx(){
+  var m = document.getElementById('modal-trx');
+  if(m) m.remove();
+}
 $id('see-all-trx').addEventListener('click',function(){setView('transactions')});
 
 // ── ADD STOCK ─────────────────────────────────────────────
