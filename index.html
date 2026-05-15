@@ -557,8 +557,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
     <svg style="position:absolute;right:-18px;top:-18px;opacity:.1;pointer-events:none" width="115" height="115" viewBox="0 0 115 115"><circle cx="88" cy="28" r="52" fill="none" stroke="rgba(126,200,74,1)" stroke-width="24"/></svg>
     <svg style="position:absolute;left:0;bottom:-14px;opacity:.07;pointer-events:none" width="78" height="58" viewBox="0 0 78 58"><ellipse cx="18" cy="48" rx="58" ry="38" fill="rgba(126,200,74,1)"/></svg>
     <div class="smenu-hdr-inner">
-      <div class="smenu-av">Ty</div>
-      <div><div class="smenu-name">Tyo</div><div class="smenu-role">Pemilik Warung</div></div>
+      <div class="smenu-av" id="smenu-av">Ty</div>
+      <div><div class="smenu-name" id="smenu-name">Tyo</div><div class="smenu-role" id="smenu-role">Pemilik Warung</div></div>
     </div>
   </div>
   <div class="smenu-body" id="smenu-body">
@@ -630,8 +630,14 @@ function showDash(){
     var inisial = nama.charAt(0).toUpperCase();
     var el = document.getElementById('prof-av');
     if(el) el.textContent = inisial;
-    var el2 = document.getElementById('prof-name');
+var el2 = document.getElementById('prof-name');
     if(el2) el2.textContent = nama;
+    var sm = document.getElementById('smenu-name');
+    if(sm) sm.textContent = nama;
+    var smav = document.getElementById('smenu-av');
+    if(smav) smav.textContent = inisial;
+    var smr = document.getElementById('smenu-role');
+    if(smr) smr.textContent = user.email;
     var el3 = document.getElementById('prof-email');
     if(el3) el3.textContent = user.email;
   }
