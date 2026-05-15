@@ -749,15 +749,21 @@ function renderStockFull(){
         '<div><div class="stk-name">'+s.name+'</div>'+
         '<div class="stk-qty '+(ok?'ok':'krit')+'">Stok: '+s.qty+' unit'+(ok?'':' • Kritis!')+'</div></div>'+
       '</div>'+
-      '<button class="bs b-gray btn-edit-stk" data-id="'+s.id+'" style="padding:8px 14px">Edit</button>'+
+      '<button class="bs b-gray btn-edit-stk" data-id="'+s.id+'" style="padding:8px 14px">Edit</button>'+ '<button class="bs b-red btn-del-stk" data-id="'+s.id+'" style="padding:8px 14px;margin-left:6px">Hapus</button>'+
     '</div>';
   }).join('');
   el.querySelectorAll('.btn-edit-stk').forEach(function(b){
     b.addEventListener('click',function(){openEditStk(+b.dataset.id)});
   });
+  el.querySelectorAll('.btn-del-stk').forEach(function(b){
+    b.addEventListener('click',function(){
+      if(confirm('Hapus barang ini?')){
+        STK=STK.filter(function(s){return s.id!==+b.dataset.id});
+        saveStk();renderStockFull();
+      }
+    });
+  });
 }
-
-
 // ── RENDER REPORT ────────────────────────────────────────
 function renderReport(){
   var total = TRX.reduce(function(s,t){return s + (t.total || 0)}, 0);
