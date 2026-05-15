@@ -413,7 +413,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
     <input class="inp" type="password" id="inp-pass" placeholder="••••••••"/>
     <button class="btn-main" id="btn-login">Masuk ke Akun →</button>
     <div class="divider"><span>atau</span></div>
-    <button class="btn-outline">🌐 Masuk dengan Google</button>
+    <button class="btn-outline" onclick="loginGoogle()">🌐 Masuk dengan Google</button>
   </div>
   <p class="login-foot">© 2026 Warung Digital</p>
 </div>
@@ -898,6 +898,21 @@ if(exportBtn){
 }
 
 // ── INIT ──────────────────────────────────────────────────
+  // LOGIN GOOGLE FIREBASE
+function loginGoogle(){
+  var provider = new firebase.auth.GoogleAuthProvider();
+  firebase.auth().signInWithPopup(provider).then(function(result){
+    var user = result.user;
+    window.currentUser = user;
+    showDash();
+  }).catch(function(error){
+    alert("Login gagal: "+error.message);
+  });
+}
+
+firebase.auth().onAuthStateChanged(function(user){
+  if(user){ window.currentUser = user; }
+});
 if(isLogin){showDash()}else{showLogin()}
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
