@@ -891,12 +891,20 @@ window._trxCart = [];
 window._trxMethod = 'Tunai';
 }
 function addToCart(idx){
-var s = STK[idx];
-if(!window._trxCart) window._trxCart = [];
-var found = window._trxCart.find(function(c){return c.idx===idx;});
-if(found){ found.qty++; }
-else { window._trxCart.push({idx:idx, name:s.name, qty:1, harga:s.harga||0}); }
-renderCart();
+  var s = STK[idx];
+  if(!window._trxCart) window._trxCart = [];
+  var found = window._trxCart.find(function(c){return c.idx===idx;});
+  
+  // -- TAMBAHAN: Cegah tambah ke keranjang jika stok tidak cukup --
+  var currentCartQty = found ? found.qty : 0;
+  if (currentCartQty >= s.qty) {
+    alert('Maaf, stok ' + s.name + ' tidak mencukupi!');
+    return;
+  }
+
+  if(found){ found.qty++; }
+  else { window._trxCart.push({idx:idx, name:s.name, qty:1, harga:s.harga||0}); }
+  renderCart();
 }
 function renderCart(){
 var cart = window._trxCart || [];
@@ -938,14 +946,30 @@ btn.style.borderColor = x===m ? '#2d6a4f' : '#ddd';
 });
 }
 function saveTrxModal(){
-var name = document.getElementById('trx-name').value.trim() || 'Pelanggan';
-var cart = window._trxCart || [];
-if(cart.length === 0){ alert('Pilih barang dulu!'); return; }
-var items = cart.reduce(function(s,c){return s+c.qty;},0);
-var total = window._trxTotal || 0;
-var barang = cart.map(function(c){return c.name+' x'+c.qty;}).join(', ');
-addTrx({name:name, items:items, total:total, method:window._trxMethod||'Tunai', note:barang});
-closeModalTrx();
+  var name = document.getElementById('trx-name').value.trim() || 'Pelanggan';
+  var cart = window._trxCart || [];
+  if(cart.length === 0){ alert('Pilih barang dulu!'); return; }
+  
+  var items = cart.reduce(function(s,c){return s+c.qty;},0);
+  var total = window._trxTotal || 0;
+  var barang = cart.map(function(c){return c.name+' x'+c.qty;}).join(', ');
+
+  // -- TAMBAHAN: Potong stok barang sesuai jumlah di keranjang --
+  cart.forEach(function(c) {
+    if(STK[c.idx]) {
+      STK[c.idx].qty -= c.qty; // Kurangi stok
+      if(STK[c.idx].qty < 0) STK[c.idx].qty = 0; // Jaga-jaga agar tidak minus
+    }
+  });
+  saveStk(); // Simpan stok terbaru ke memori & Firebase
+  
+  // Jika sedang berada di halaman stok, render ulang agar angkanya langsung update
+  if(curView === 'stock') renderStockFull(); 
+  if(curView === 'home') renderHome();
+  // -----------------------------------------------------------
+
+  addTrx({name:name, items:items, total:total, method:window._trxMethod||'Tunai', note:barang});
+  closeModalTrx();
 }
 function closeModalTrx(){
 var m = document.getElementById('modal-trx');
