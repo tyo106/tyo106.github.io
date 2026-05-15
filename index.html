@@ -903,7 +903,14 @@ function loginGoogle(){
   var provider = new firebase.auth.GoogleAuthProvider();
   firebase.auth().signInWithPopup(provider).then(function(result){
     var user = result.user;
-    window.currentUser = user;
+window.currentUser = user;
+    // Update profil dari Google ke localStorage
+    localStorage.setItem('wd2_login', JSON.stringify({
+      nama: user.displayName,
+      email: user.email,
+      foto: user.photoURL,
+      role: 'Pemilik'
+    }));
     showDash();
   }).catch(function(error){
     alert("Login gagal: "+error.message);
