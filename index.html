@@ -624,7 +624,7 @@ function setView(v){
   // Update Bottom Nav
   document.querySelectorAll('.ni').forEach(function(b){b.classList.toggle('active',b.dataset.v===v)});
   
-  // FIX MARKER DOBEL: Hapus semua active di Side Menu, lalu aktifkan yang pertama saja
+  // Update Side Menu tanpa dobel active
   document.querySelectorAll('#smenu-body .mi').forEach(function(m){ m.classList.remove('active'); });
   var activeMenu = document.querySelector('#smenu-body .mi[data-v="' + v + '"]');
   if(activeMenu) activeMenu.classList.add('active');
@@ -636,15 +636,27 @@ function setView(v){
   if(v==='account')renderAccount();
 }
 // ── RENDER HOME ───────────────────────────────────────────
+function sc(lbl,val,ico,cls,clr,onclickStr){
+return'<div class="sc '+cls+'" onclick="'+(onclickStr||'')+'" style="cursor:pointer">'+
+'<div class="sc-top"><span class="sc-lbl">'+lbl+'</span><span class="sc-ico">'+ico+'</span></div>'+
+'<div class="sc-val">'+val+'</div>'+
+'<svg class="sc-ring" width="76" height="76" viewBox="0 0 76 76"><circle cx="62" cy="62" r="38" fill="none" stroke="'+clr+'" stroke-width="16"/></svg>'+
+'<svg class="sc-dot" width="38" height="38" viewBox="0 0 38 38"><circle cx="19" cy="19" r="13" fill="'+clr+'"/></svg>'+
+'</div>';
+}
+
 function renderHome(){
 var omzet=TRX.reduce(function(s,t){return s+(t.total||0)},0);
 var kasbon=TRX.filter(function(t){return t.method==='Kasbon'}).reduce(function(s,t){return s+(t.total||0)},0);
 var kritis=STK.filter(function(s){return s.qty<=2}).length;
+
+// Menghubungkan setiap kartu statistik ke menu atau fitur pop-up highlight masing-masing
 $id('stat-grid').innerHTML=
-sc('Omzet Hari Ini',rp(omzet),' 💰 ','sg','#1a6428')+
-sc('Transaksi',TRX.length+' trx',' 🧾 ','sb','#174b88')+
-sc('Total Kasbon',rp(kasbon),' 📋 ','sr','#8f1a1a')+
-sc('Stok Kritis',kritis+' item',' ⚠ ️','sa','#8e5a00');
+sc('Omzet Hari Ini',rp(omzet),' 💰 ','sg','#1a6428',"setView('report')")+
+sc('Transaksi',TRX.length+' trx',' 🧾 ','sb','#174b88',"setView('transactions')")+
+sc('Total Kasbon',rp(kasbon),' 📋 ','sr','#8f1a1a',"showKasbonHighlight()")+
+sc('STOK HAMPIR HABIS',kritis+' item',' ⚠ ️','sa','#8e5a00',"showStokHampirHabisHighlight()");
+
 var aEl=$id('alert-box');
 var kritArr=STK.filter(function(s){return s.qty<=2});
 if(kritArr.length){
@@ -660,14 +672,6 @@ rEl.innerHTML=TRX.slice(0,3).map(function(t){return trxHTML(t,false)}).join('');
 rEl.querySelectorAll('.trx-card').forEach(function(c){
 c.addEventListener('click',function(){openTrxModal(+c.dataset.id)});
 });
-}
-function sc(lbl,val,ico,cls,clr){
-return'<div class="sc '+cls+'">'+
-'<div class="sc-top"><span class="sc-lbl">'+lbl+'</span><span class="sc-ico">'+ico+'</span></div>'+
-'<div class="sc-val">'+val+'</div>'+
-'<svg class="sc-ring" width="76" height="76" viewBox="0 0 76 76"><circle cx="62" cy="62" r="38" fill="none" stroke="'+clr+'" stroke-width="16"/></svg>'+
-'<svg class="sc-dot" width="38" height="38" viewBox="0 0 38 38"><circle cx="19" cy="19" r="13" fill="'+clr+'"/></svg>'+
-'</div>';
 }
 // ── RENDER TRX FULL ───────────────────────────────────────
 function renderTrxFull(){
@@ -870,7 +874,7 @@ stk.forEach(function(s,i){
 html += '<div style="display:flex;justify-content:space-between;align-items:center;background:#f5f5f5;padding:8px 12px;border-radius:10px">';
 html += '<span style="font-size:13px">'+s.name+'</span>';
 html += '<div style="display:flex;align-items:center;gap:8px">';
-html += '<span style="font-size:12px;color:#888">Stok: '+s.qty+'</span>';
+html += '<span id="live-stk-'+i+'" style="font-size:12px;color:#888">Stok: '+s.qty+'</span>';
 html += '<button onclick="addToCart('+i+')" style="background:#2d6a4f;color:#fff;border:none;border-radius:8px;padding:4px 12px;font-size:13px">+</button>';
 html += '</div></div>';
 });
@@ -890,12 +894,13 @@ document.body.insertAdjacentHTML('beforeend', html);
 window._trxCart = [];
 window._trxMethod = 'Tunai';
 }
+
 function addToCart(idx){
   var s = STK[idx];
   if(!window._trxCart) window._trxCart = [];
   var found = window._trxCart.find(function(c){return c.idx===idx;});
   
-  // -- TAMBAHAN: Cegah tambah ke keranjang jika stok tidak cukup --
+  // Mencegah keranjang melebihi stok
   var currentCartQty = found ? found.qty : 0;
   if (currentCartQty >= s.qty) {
     alert('Maaf, stok ' + s.name + ' tidak mencukupi!');
@@ -906,29 +911,55 @@ function addToCart(idx){
   else { window._trxCart.push({idx:idx, name:s.name, qty:1, harga:s.harga||0}); }
   renderCart();
 }
+
 function renderCart(){
-var cart = window._trxCart || [];
-var total = 0;
-var html = '';
-if(cart.length > 0){
-html += '<p style="font-size:12px;font-weight:600;color:#555;margin:0 0 6px">Keranjang:</p>';
-cart.forEach(function(c,i){
-var sub = c.qty * c.harga;
-total += sub;
-html += '<div style="display:flex;justify-content:space-between;align-items:center;background:#e8f5e9;padding:6px 10px;border-radius:8px;margin-bottom:4px">';
-html += '<span style="font-size:12px">'+c.name+' x'+c.qty+'</span>';
-html += '<div style="display:flex;gap:6px;align-items:center">';
-if(c.harga > 0) html += '<span style="font-size:12px;color:#2d6a4f">Rp '+c.harga.toLocaleString('id')+'</span>';
-html += '<button onclick="removeFromCart('+i+')" style="background:#e63946;color:#fff;border:none;border-radius:6px;padding:2px 8px;font-size:12px">-</button>';
-html += '</div></div>';
-});
+  var cart = window._trxCart || [];
+  var total = 0;
+  var html = '';
+  
+  if(cart.length > 0){
+    html += '<p style="font-size:12px;font-weight:600;color:#555;margin:0 0 6px">Keranjang:</p>';
+    cart.forEach(function(c,i){
+      var sub = c.qty * c.harga;
+      total += sub;
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;background:#e8f5e9;padding:6px 10px;border-radius:8px;margin-bottom:4px">';
+      html += '<span style="font-size:12px">'+c.name+' x'+c.qty+'</span>';
+      html += '<div style="display:flex;gap:6px;align-items:center">';
+      if(c.harga > 0) html += '<span style="font-size:12px;color:#2d6a4f">Rp '+c.harga.toLocaleString('id')+'</span>';
+      html += '<button onclick="removeFromCart('+i+')" style="background:#e63946;color:#fff;border:none;border-radius:6px;padding:2px 8px;font-size:12px">-</button>';
+      html += '</div></div>';
+    });
+  }
+  
+  var el = document.getElementById('trx-cart');
+  if(el) el.innerHTML = html;
+  
+  var telEl = document.getElementById('trx-total');
+  if(telEl) telEl.textContent = 'Total: Rp ' + total.toLocaleString('id');
+  
+  window._trxTotal = total;
+
+  // Update perhitungan "Live Stock" pada modal penambahan transaksi
+  STK.forEach(function(s, i) {
+    var stkEl = document.getElementById('live-stk-' + i);
+    if(stkEl) {
+      var inCart = cart.find(function(c){ return c.idx === i; });
+      var cartQty = inCart ? inCart.qty : 0;
+      var sisaStk = s.qty - cartQty;
+      
+      stkEl.textContent = 'Stok: ' + sisaStk;
+      
+      if(sisaStk <= 0) {
+        stkEl.style.color = '#e63946';
+        stkEl.style.fontWeight = 'bold';
+      } else {
+        stkEl.style.color = '#888';
+        stkEl.style.fontWeight = 'normal';
+      }
+    }
+  });
 }
-var el = document.getElementById('trx-cart');
-if(el) el.innerHTML = html;
-var telEl = document.getElementById('trx-total');
-if(telEl) telEl.textContent = 'Total: Rp ' + total.toLocaleString('id');
-window._trxTotal = total;
-}
+
 function removeFromCart(i){
 if(window._trxCart[i].qty > 1){ window._trxCart[i].qty--; }
 else { window._trxCart.splice(i,1); }
@@ -945,6 +976,7 @@ btn.style.borderColor = x===m ? '#2d6a4f' : '#ddd';
 }
 });
 }
+
 function saveTrxModal(){
   var name = document.getElementById('trx-name').value.trim() || 'Pelanggan';
   var cart = window._trxCart || [];
@@ -954,28 +986,28 @@ function saveTrxModal(){
   var total = window._trxTotal || 0;
   var barang = cart.map(function(c){return c.name+' x'+c.qty;}).join(', ');
 
-  // -- TAMBAHAN: Potong stok barang sesuai jumlah di keranjang --
+  // Mengurangi stok permanen di sistem saat disimpan
   cart.forEach(function(c) {
     if(STK[c.idx]) {
-      STK[c.idx].qty -= c.qty; // Kurangi stok
-      if(STK[c.idx].qty < 0) STK[c.idx].qty = 0; // Jaga-jaga agar tidak minus
+      STK[c.idx].qty -= c.qty;
+      if(STK[c.idx].qty < 0) STK[c.idx].qty = 0; 
     }
   });
-  saveStk(); // Simpan stok terbaru ke memori & Firebase
+  saveStk();
   
-  // Jika sedang berada di halaman stok, render ulang agar angkanya langsung update
   if(curView === 'stock') renderStockFull(); 
   if(curView === 'home') renderHome();
-  // -----------------------------------------------------------
 
   addTrx({name:name, items:items, total:total, method:window._trxMethod||'Tunai', note:barang});
   closeModalTrx();
 }
+
 function closeModalTrx(){
 var m = document.getElementById('modal-trx');
 if(m) m.remove();
 }
 $id('see-all-trx').addEventListener('click',function(){setView('transactions')});
+
 // ── ADD STOCK ─────────────────────────────────────────────
 $id('btn-add-stk').addEventListener('click',function(){
 var name=$id('ns-name').value.trim();
@@ -986,6 +1018,7 @@ addStk(name,isNaN(qty)?0:qty,isNaN(harga)?0:harga);
 $id('ns-harga').value='';
 $id('ns-name').value='';$id('ns-qty').value='';
 });
+
 // ── EXPORT REPORT ────────────────────────────────────────
 var exportBtn = $id('btn-export-report');
 if(exportBtn){
@@ -1005,6 +1038,7 @@ var text =
 alert(text);
 });
 }
+
 // ── LOGIN GOOGLE FIREBASE ─────────────────────────────────
 function loginGoogle(){
 var provider = new firebase.auth.GoogleAuthProvider();
@@ -1034,6 +1068,67 @@ showDash();
 showLogin();
 }
 });
+
+// ── HIGHLIGHT POPUP KASBON ───────────────────────────────
+function showKasbonHighlight(){
+  var list = TRX.filter(function(t){ return t.method === 'Kasbon'; });
+  if(!list.length){
+    openModal('<h3 style="margin-bottom:12px">📋 Highlight Kasbon</h3><p style="font-size:13px;color:#666;text-align:center;padding:10px 0">Tidak ada piutang kasbon saat ini.</p><button class="bs b-gray" style="width:100%;padding:11px;margin-top:10px" onclick="closeModal()">Tutup</button>');
+    return;
+  }
+  var html = '<h3 style="margin-bottom:12px">📋 Daftar Pelanggan Kasbon</h3>';
+  html += '<div style="display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;margin-bottom:14px;padding-right:4px">';
+  list.forEach(function(t){
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;background:#fdf2f2;padding:10px 14px;border-radius:14px;border:1px solid #f5c6c6">';
+    html += '<div><div style="font-size:13px;font-weight:700;color:#111">'+t.name+'</div><div style="font-size:11px;color:#888">'+t.time+' · '+t.items+' item</div></div>';
+    html += '<div style="font-size:13px;font-weight:800;color:#8f1a1a">'+rp(t.total)+'</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  html += '<button class="bs b-gray" style="width:100%;padding:11px" onclick="closeModal()">Tutup</button>';
+  openModal(html);
+}
+
+// ── HIGHLIGHT POPUP STOK HAMPIR HABIS ────────────────────
+function showStokHampirHabisHighlight(){
+  var list = STK.filter(function(s){ return s.qty <= 2; });
+  if(!list.length){
+    openModal('<h3 style="margin-bottom:12px">📦 Stok Hampir Habis</h3><p style="font-size:13px;color:#666;text-align:center;padding:10px 0">Semua stok barang aman dan melimpah!</p><button class="bs b-gray" style="width:100%;padding:11px;margin-top:10px" onclick="closeModal()">Tutup</button>');
+    return;
+  }
+  var html = '<h3 style="margin-bottom:12px">📦 Stok Hampir Habis</h3>';
+  html += '<p style="font-size:12px;color:#666;margin-bottom:12px">Ubah jumlah stok langsung di bawah ini untuk menambahkan barang:</p>';
+  html += '<div style="display:flex;flex-direction:column;gap:10px;max-height:280px;overflow-y:auto;margin-bottom:14px;padding-right:4px">';
+  list.forEach(function(s){
+    html += '<div style="background:#fff3cd;padding:12px;border-radius:16px;border:1px solid #ffeeba">';
+    html += '<div style="font-size:13px;font-weight:700;margin-bottom:8px;color:#856404">'+s.name+'</div>';
+    html += '<div style="display:flex;gap:8px;align-items:center">';
+    html += '<span style="font-size:12px;color:#666;white-space:nowrap">Sisa: '+s.qty+'</span>';
+    html += '<input id="hl-qty-'+s.id+'" type="number" placeholder="Stok baru" class="inp" style="flex:1;margin-bottom:0;padding:8px 10px;font-size:13px;border-radius:10px"/>';
+    html += '<button class="btn-main" style="width:auto;padding:8px 14px;font-size:12px;border-radius:10px;box-shadow:none" onclick="saveHighlightStk('+s.id+')">Simpan</button>';
+    html += '</div></div>';
+  });
+  html += '</div>';
+  html += '<button class="bs b-gray" style="width:100%;padding:11px" onclick="closeModal()">Tutup</button>';
+  openModal(html);
+}
+
+// Fungsi eksekusi simpan stok dari pop-up highlight
+function saveHighlightStk(id){
+  var inp = document.getElementById('hl-qty-' + id);
+  if(!inp) return;
+  var v = parseInt(inp.value, 10);
+  if(isNaN(v) || v < 0) { alert('Masukkan angka jumlah stok yang valid!'); return; }
+  
+  STK = STK.map(function(s){ return s.id === id ? Object.assign({}, s, {qty: v}) : s; });
+  saveStk();
+  
+  if(curView === 'home') renderHome();
+  if(curView === 'stock') renderStockFull();
+  
+  // Refresh pop-up
+  showStokHampirHabisHighlight();
+}
 </script>
 </body>
 </html>
