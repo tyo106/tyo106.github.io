@@ -1037,12 +1037,16 @@ alert(text);
 });
 }
 
-// ── LOGIN GOOGLE FIREBASE (FIXED FOR MOBILE/IOS) ──────────
+// ── LOGIN GOOGLE FIREBASE ─────────────────────────────────
 function loginGoogle(){
   var provider = new firebase.auth.GoogleAuthProvider();
-  // Menggunakan signInWithRedirect agar di iPhone (Safari) tidak diblokir
-  firebase.auth().signInWithRedirect(provider).catch(function(error){
-    alert("Login gagal: "+error.message);
+  // Kita kembalikan ke signInWithPopup karena iPhone lu udah aman dari blokir
+  firebase.auth().signInWithPopup(provider).then(function(result){
+    var user = result.user;
+    window.currentUser = user;
+    showDash();
+  }).catch(function(error){
+    alert("Login gagal: " + error.message);
   });
 }
 
