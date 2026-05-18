@@ -50,7 +50,7 @@ box-shadow:0 0 60px rgba(0,0,0,.2);
 }
 /* ── ANIMATIONS ───────────────────────────────────────── */
 @keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeIn{from{opacity:0}to{transform:fadeIn;opacity:1}}
 @keyframes floatA{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-12px) rotate(8deg)}}
 @keyframes floatB{0%,100%{transform:translateY(0)}50%{transform:translateY(10px)}}
 @keyframes floatC{0%,100%{transform:translateX(0)}50%{transform:translateX(8px)}}
@@ -413,7 +413,10 @@ font-weight:900;font-size:17px;flex-shrink:0;
 <input class="inp" type="password" id="inp-pass" placeholder="••••••••"/>
 <button class="btn-main" id="btn-login">Masuk ke Akun →</button>
 <div class="divider"><span>atau</span></div>
-<button class="btn-outline" onclick="loginGoogle()"> 🌐  Masuk dengan Google</button>
+<button class="btn-outline" onclick="loginGoogle()"> 
+  <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" style="width:18px;height:18px;"> 
+  Masuk dengan Google
+</button>
 </div>
 <p class="login-foot">©️ 2026 Warung Digital</p>
 </div>
@@ -628,7 +631,6 @@ function setView(v){
   // Update Bottom Nav
   document.querySelectorAll('.ni').forEach(function(b){b.classList.toggle('active',b.dataset.v===v)});
   
-  // (Sidebar menu active states are not needed anymore since they are popups, but keeping for compatibility)
   document.querySelectorAll('#smenu-body .mi').forEach(function(m){ m.classList.remove('active'); });
 
   if(v==='home')renderHome();
@@ -636,7 +638,7 @@ function setView(v){
   if(v==='stock')renderStockFull();
   if(v==='report')renderReport();
   if(v==='account')renderAccount();
-
+  
   updateNotifBadge();
 }
 // ── RENDER HOME ───────────────────────────────────────────
@@ -654,7 +656,6 @@ var omzet=TRX.reduce(function(s,t){return s+(t.total||0)},0);
 var kasbon=TRX.filter(function(t){return t.method==='Kasbon'}).reduce(function(s,t){return s+(t.total||0)},0);
 var kritis=STK.filter(function(s){return s.qty<=2}).length;
 
-// Menghubungkan setiap kartu statistik ke menu atau fitur pop-up highlight masing-masing
 $id('stat-grid').innerHTML=
 sc('Omzet Hari Ini',rp(omzet),' 💰 ','sg','#1a6428',"setView('report')")+
 sc('Transaksi',TRX.length+' trx',' 🧾 ','sb','#174b88',"setView('transactions')")+
@@ -832,7 +833,6 @@ function openMenu(){$id('ov').classList.add('open');$id('smenu').classList.add('
 function closeMenu(){$id('ov').classList.remove('open');$id('smenu').classList.remove('open')}
 $id('btn-menu').addEventListener('click',openMenu);
 $id('ov').addEventListener('click',closeMenu);
-// Navigasi bawah
 document.querySelectorAll('.ni').forEach(function(b){
 b.addEventListener('click',function(){setView(b.dataset.v)});
 });
@@ -845,7 +845,7 @@ function logout(){
 if (firebase.auth().currentUser) {
 firebase.auth().signOut().then(function() {
 S.set('wd2_login',false);isLogin=false;closeMenu();showLogin();
-_authReady = false; // Reset listener Firebase flag
+_authReady = false; 
 }).catch(function(error) {
 console.error("Logout gagal", error);
 });
@@ -862,7 +862,7 @@ $id('btn-add-trx').addEventListener('click',function(){
 openModalTrx();
 });
 function openModalTrx(){
-if(document.getElementById('modal-trx')) return; // Cegah double modal
+if(document.getElementById('modal-trx')) return; 
 var stk = STK;
 var cart = [];
 var html = '<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:flex-end;justify-content:center" id="modal-trx">';
@@ -901,7 +901,6 @@ function addToCart(idx){
   if(!window._trxCart) window._trxCart = [];
   var found = window._trxCart.find(function(c){return c.idx===idx;});
   
-  // Mencegah keranjang melebihi stok
   var currentCartQty = found ? found.qty : 0;
   if (currentCartQty >= s.qty) {
     alert('Maaf, stok ' + s.name + ' tidak mencukupi!');
@@ -940,7 +939,6 @@ function renderCart(){
   
   window._trxTotal = total;
 
-  // Update perhitungan "Live Stock" pada modal penambahan transaksi
   STK.forEach(function(s, i) {
     var stkEl = document.getElementById('live-stk-' + i);
     if(stkEl) {
@@ -987,7 +985,6 @@ function saveTrxModal(){
   var total = window._trxTotal || 0;
   var barang = cart.map(function(c){return c.name+' x'+c.qty;}).join(', ');
 
-  // Mengurangi stok permanen di sistem saat disimpan
   cart.forEach(function(c) {
     if(STK[c.idx]) {
       STK[c.idx].qty -= c.qty;
@@ -1040,10 +1037,10 @@ alert(text);
 });
 }
 
-// ── LOGIN GOOGLE FIREBASE ─────────────────────────────────
+// ── LOGIN GOOGLE FIREBASE (FIXED FOR MOBILE/IOS) ──────────
 function loginGoogle(){
   var provider = new firebase.auth.GoogleAuthProvider();
-  // FIXED untuk iOS: Menggunakan redirect alih-alih popup
+  // Menggunakan signInWithRedirect agar di iPhone (Safari) tidak diblokir
   firebase.auth().signInWithRedirect(provider).catch(function(error){
     alert("Login gagal: "+error.message);
   });
@@ -1126,14 +1123,8 @@ function openPrinter() {
 
 function openBantuan() {
   closeMenu();
-  
-  // 1. Ganti angka di bawah pakai nomor WA lu (Wajib mulai dari 62, jangan pakai 0)
   var nomorWA = "628561205337"; 
-  
-  // 2. Ini teks otomatis pas mereka buka WA lu
   var pesanOtomatis = "Halo Developer, saya butuh bantuan terkait aplikasi Warung Digital.";
-  
-  // Bikin link WA
   var linkWA = "https://wa.me/" + nomorWA + "?text=" + encodeURIComponent(pesanOtomatis);
   
   var html = '<h3 style="margin-bottom:12px">❓ Bantuan</h3>';
@@ -1188,7 +1179,6 @@ function showStokHampirHabisHighlight(){
   openModal(html);
 }
 
-// Fungsi eksekusi simpan stok dari pop-up highlight
 function saveHighlightStk(id){
   var inp = document.getElementById('hl-qty-' + id);
   if(!inp) return;
@@ -1201,26 +1191,24 @@ function saveHighlightStk(id){
   if(curView === 'home') renderHome();
   if(curView === 'stock') renderStockFull();
   
-  // Refresh pop-up
   showStokHampirHabisHighlight();
 }
-  // ── FITUR NOTIFIKASI PINTAR ────────────────────────────────
+
+// ── FITUR NOTIFIKASI PINTAR ────────────────────────────────
 function updateNotifBadge() {
-  // Cek apakah ada notif (Stok <= 2 atau ada Kasbon)
   var adaKritis = STK.filter(function(s){ return s.qty <= 2 }).length > 0;
   var adaKasbon = TRX.filter(function(t){ return t.method === 'Kasbon' }).length > 0;
   
   var dot = document.getElementById('notif-dot');
   if(dot) {
     if(adaKritis || adaKasbon) {
-      dot.style.display = 'block'; // Nyalakan titik merah
+      dot.style.display = 'block'; 
     } else {
-      dot.style.display = 'none';  // Matikan titik merah
+      dot.style.display = 'none';  
     }
   }
 }
 
-// Panggil ini pas pertama kali load
 setTimeout(updateNotifBadge, 500);
 
 function openNotif() {
@@ -1232,7 +1220,6 @@ function openNotif() {
   
   var count = 0;
   
-  // 1. Notif Stok
   kritis.forEach(function(s) {
     html += '<div style="padding:12px;background:#fff3cd;border-left:4px solid #ffc107;border-radius:8px">';
     html += '<div style="font-size:13px;font-weight:700;color:#856404;margin-bottom:4px">⚠️ Stok Kritis</div>';
@@ -1241,7 +1228,6 @@ function openNotif() {
     count++;
   });
   
-  // 2. Notif Kasbon
   kasbon.forEach(function(t) {
     html += '<div style="padding:12px;background:#fdf2f2;border-left:4px solid #dc3545;border-radius:8px">';
     html += '<div style="font-size:13px;font-weight:700;color:#842029;margin-bottom:4px">💸 Tagihan Kasbon</div>';
