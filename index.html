@@ -1126,7 +1126,22 @@ function openPrinter() {
 
 function openBantuan() {
   closeMenu();
-  openModal('<h3 style="margin-bottom:12px">❓ Bantuan</h3><p style="font-size:13px;color:#666;margin-bottom:15px;text-align:center">Punya kendala atau mau upgrade fitur premium Warung Digital?</p><button class="bg-full" onclick="alert(\'Membuka WhatsApp Developer...\')">💬 Hubungi Developer</button><button class="bs b-gray" style="width:100%;padding:11px;margin-top:8px" onclick="closeModal()">Tutup</button>');
+  
+  // 1. Ganti angka di bawah pakai nomor WA lu (Wajib mulai dari 62, jangan pakai 0)
+  var nomorWA = "6281234567890"; 
+  
+  // 2. Ini teks otomatis pas mereka buka WA lu
+  var pesanOtomatis = "Halo Developer, saya butuh bantuan terkait aplikasi Warung Digital.";
+  
+  // Bikin link WA
+  var linkWA = "https://wa.me/" + nomorWA + "?text=" + encodeURIComponent(pesanOtomatis);
+  
+  var html = '<h3 style="margin-bottom:12px">❓ Bantuan</h3>';
+  html += '<p style="font-size:13px;color:#666;margin-bottom:15px;text-align:center">Punya kendala atau mau upgrade fitur premium Warung Digital?</p>';
+  html += '<button class="bg-full" onclick="window.open(\'' + linkWA + '\')">💬 Hubungi Developer (WA)</button>';
+  html += '<button class="bs b-gray" style="width:100%;padding:11px;margin-top:8px" onclick="closeModal()">Tutup</button>';
+  
+  openModal(html);
 }
 
 // ── HIGHLIGHT POPUP KASBON ───────────────────────────────
