@@ -435,7 +435,7 @@ font-weight:900;font-size:17px;flex-shrink:0;
 <div class="tb-date" id="tb-date"></div>
 <div class="tb-title" id="tb-title">Dashboard</div>
 </div>
-<button class="tb-btn tb-notif"> 🔔 <span class="nb-dot"></span></button>
+<button class="tb-btn tb-notif" onclick="openNotif()"> 🔔 <span class="nb-dot" id="notif-dot" style="display:none"></span></button>
 </div>
 </div>
 <svg style="position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;height:100%;opacity:.028;pointer-events:none;z-index:0" viewBox="0 0 420 844" preserveAspectRatio="xMidYMid slice">
@@ -636,6 +636,8 @@ function setView(v){
   if(v==='stock')renderStockFull();
   if(v==='report')renderReport();
   if(v==='account')renderAccount();
+
+  updateNotifBadge();
 }
 // ── RENDER HOME ───────────────────────────────────────────
 function sc(lbl,val,ico,cls,clr,onclickStr){
@@ -1186,6 +1188,60 @@ function saveHighlightStk(id){
   
   // Refresh pop-up
   showStokHampirHabisHighlight();
+}
+  // ── FITUR NOTIFIKASI PINTAR ────────────────────────────────
+function updateNotifBadge() {
+  // Cek apakah ada notif (Stok <= 2 atau ada Kasbon)
+  var adaKritis = STK.filter(function(s){ return s.qty <= 2 }).length > 0;
+  var adaKasbon = TRX.filter(function(t){ return t.method === 'Kasbon' }).length > 0;
+  
+  var dot = document.getElementById('notif-dot');
+  if(dot) {
+    if(adaKritis || adaKasbon) {
+      dot.style.display = 'block'; // Nyalakan titik merah
+    } else {
+      dot.style.display = 'none';  // Matikan titik merah
+    }
+  }
+}
+
+// Panggil ini pas pertama kali load
+setTimeout(updateNotifBadge, 500);
+
+function openNotif() {
+  var kritis = STK.filter(function(s){ return s.qty <= 2 });
+  var kasbon = TRX.filter(function(t){ return t.method === 'Kasbon' });
+  
+  var html = '<h3 style="margin-bottom:12px">🔔 Notifikasi</h3>';
+  html += '<div style="display:flex;flex-direction:column;gap:10px;max-height:300px;overflow-y:auto;padding-right:5px;margin-bottom:15px">';
+  
+  var count = 0;
+  
+  // 1. Notif Stok
+  kritis.forEach(function(s) {
+    html += '<div style="padding:12px;background:#fff3cd;border-left:4px solid #ffc107;border-radius:8px">';
+    html += '<div style="font-size:13px;font-weight:700;color:#856404;margin-bottom:4px">⚠️ Stok Kritis</div>';
+    html += '<div style="font-size:12px;color:#666">Stok <b>'+s.name+'</b> sisa '+s.qty+' unit. Segera restock!</div>';
+    html += '</div>';
+    count++;
+  });
+  
+  // 2. Notif Kasbon
+  kasbon.forEach(function(t) {
+    html += '<div style="padding:12px;background:#fdf2f2;border-left:4px solid #dc3545;border-radius:8px">';
+    html += '<div style="font-size:13px;font-weight:700;color:#842029;margin-bottom:4px">💸 Tagihan Kasbon</div>';
+    html += '<div style="font-size:12px;color:#666">Jangan lupa tagih <b>'+t.name+'</b> sebesar '+rp(t.total)+'.</div>';
+    html += '</div>';
+    count++;
+  });
+  
+  if(count === 0) {
+    html += '<div style="text-align:center;padding:20px;color:#9ca3af;font-size:13px">✨ Belum ada notifikasi baru untukmu.</div>';
+  }
+  
+  html += '</div>';
+  html += '<button class="bs b-gray" style="width:100%;padding:11px" onclick="closeModal()">Tutup</button>';
+  openModal(html);
 }
 </script>
 </body>
