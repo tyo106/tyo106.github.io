@@ -130,6 +130,31 @@ export async function migrasiDariLocalStorage() {
 }
 
 // ============================================================
+// 3b. MIRROR DATA LOKAL (dipakai index.html)
+// Simpan/muat satu nilai ke users/{uid}/{key}/data — dipakai
+// S.set() di index.html supaya data lokal tetap tersimpan di cloud
+// dan bisa ditarik lagi di HP lain saat login pertama kali.
+// ============================================================
+
+/** Simpan satu nilai (mis. 'wd2_trx', 'wd2_stk') ke cloud */
+export async function simpanData(key, value) {
+  const uid = auth.currentUser?.uid;
+  if (!uid) return;
+  await setDoc(doc(db, "users", uid, key, "data"), {
+    value,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+/** Muat satu nilai mirror dari cloud (null kalau belum ada) */
+export async function muatData(key) {
+  const uid = auth.currentUser?.uid;
+  if (!uid) return null;
+  const snap = await getDoc(doc(db, "users", uid, key, "data"));
+  return snap.exists() ? snap.data().value : null;
+}
+
+// ============================================================
 // 4. TRANSAKSI
 // ============================================================
 
@@ -315,6 +340,8 @@ window.warungDB = {
   logout,
   cekLogin,
   migrasiDariLocalStorage,
+  simpanData,
+  muatData,
   tambahTransaksi,
   getTransaksi,
   hapusTransaksi,
@@ -334,3 +361,7 @@ window.warungDB = {
 
 console.log("✅ Firebase Warung Digital siap digunakan!");
 console.log("💡 Gunakan window.warungDB untuk akses semua fungsi");
+
+// Beri tahu index.html bahwa modul sudah siap (modul dimuat deferred,
+// jadi script biasa di halaman tidak bisa mengandalkannya langsung).
+window.dispatchEvent(new Event("warungdb-ready"));

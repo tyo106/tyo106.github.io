@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Profil + mirror data lokal: users/{uid}/... ──
+    // Dipakai loginGoogle() (profil) dan simpanData()/muatData() di
+    // firebase-warung-digital.js (mirror wd2_trx, wd2_stk, dll).
+    // Hanya pemilik akun yang boleh baca/tulis dokumennya sendiri.
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ── Koleksi panduan (transaksi, stokBarang, kasbon, produk, barang) ──
+    // Setiap dokumen wajib punya field userId milik pembuatnya.
+    // Baca/ubah/hapus: hanya pemilik dokumen. Buat baru: userId harus = uid sendiri.
+    match /transaksi/{docId} {
+      allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+
+    match /stokBarang/{docId} {
+      allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+
+    match /kasbon/{docId} {
+      allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+
+    match /produk/{docId} {
+      allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+
+    match /barang/{docId} {
+      allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+  }
+}

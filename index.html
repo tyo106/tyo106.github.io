@@ -7,23 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <title>Warung Digital</title>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script>
-const firebaseConfig = {
-apiKey: "AIzaSyA6gNuDN01l0V6Q6iXNM-3otPZiygTMNNw",
-authDomain: "warung-digital-8fb7b.firebaseapp.com",
-projectId: "warung-digital-8fb7b",
-storageBucket: "warung-digital-8fb7b.firebasestorage.app",
-messagingSenderId: "280805109617",
-appId: "1:280805109617:web:74adc9dc0e7501453e50d0"
-};
-firebase.initializeApp(firebaseConfig);
-window.auth = firebase.auth();
-window.db = firebase.firestore();
-console.log(" ✅  Firebase Warung Digital siap!");
-</script>
+<!-- Firebase diinisialisasi oleh firebase-warung-digital.js (ES module, dimuat di akhir body).
+     Jangan tambahkan SDK compat di sini — satu init saja, supaya tidak bentrok duplicate-app. -->
 <style>
 /* ── RESET & BASE ─────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -555,11 +540,11 @@ var S={
 get:function(k,d){try{var r=localStorage.getItem(k);return r?JSON.parse(r):d}catch(e){return d}},
 set:function(k,v){
 try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}
-// Sync ke Firebase jika user login
-var user = firebase.auth().currentUser;
+// Sync ke Firebase (modul) jika user login
+var user = window.currentUser;
 var uid = user ? user.uid : null;
-if(uid && window.db){
-window.db.collection('users').doc(uid).collection(k).doc('data').set({value:v});
+if(uid && window.warungDB && window.warungDB.simpanData){
+window.warungDB.simpanData(k, v).catch(function(){});
 }
 }
 };
@@ -593,7 +578,7 @@ $id('pg-login').classList.add('active');
 $id('pg-dash').classList.remove('active');
 }
 function showDash(){
-var user = firebase.auth().currentUser;
+var user = window.currentUser;
 if(user){
 var nama = user.displayName || 'User';
 var inisial = nama.charAt(0).toUpperCase();
@@ -842,15 +827,11 @@ S.set('wd2_login',true);isLogin=true;showDash();
 });
 
 function logout(){
-if (firebase.auth().currentUser) {
-firebase.auth().signOut().then(function() {
-S.set('wd2_login',false);isLogin=false;closeMenu();showLogin();
-_authReady = false; 
-}).catch(function(error) {
-console.error("Logout gagal", error);
-});
+S.set('wd2_login',false);isLogin=false;closeMenu();
+if(window.warungDB){
+window.warungDB.logout();
 } else {
-S.set('wd2_login',false);isLogin=false;closeMenu();showLogin();
+showLogin();
 }
 }
 
@@ -1039,29 +1020,50 @@ alert(text);
 
 // ── LOGIN GOOGLE FIREBASE ─────────────────────────────────
 function loginGoogle(){
-  var provider = new firebase.auth.GoogleAuthProvider();
-  // Kita kembalikan ke signInWithPopup karena iPhone lu udah aman dari blokir
-  firebase.auth().signInWithPopup(provider).then(function(result){
-    var user = result.user;
-    window.currentUser = user;
-    showDash();
-  }).catch(function(error){
-    alert("Login gagal: " + error.message);
+  if(!window.warungDB){
+    alert("Firebase belum siap, coba lagi sebentar.");
+    return;
+  }
+  window.warungDB.loginGoogle().catch(function(error){
+    alert("Login gagal: " + (error && error.message ? error.message : error));
   });
 }
 
-// ── INIT —  ✅  FIX: flag _authReady cegah render dobel  ─────
-var _authReady = false;
-firebase.auth().onAuthStateChanged(function(user){
-if(_authReady) return;
-_authReady = true;
-if(user){
-window.currentUser = user;
-showDash();
-} else {
-showLogin();
+// ── INIT — auth via modul Firebase (window.warungDB) ──────────
+// Modul dimuat belakangan (deferred), jadi pasang listener saat modul siap.
+var _sudahSyncCloud = false;
+function sinkronDariCloud(){
+  if(!window.warungDB || !window.warungDB.muatData) return;
+  try{
+    var janji = [];
+    if(localStorage.getItem('wd2_trx')===null){
+      janji.push(window.warungDB.muatData('wd2_trx').then(function(t){
+        if(t && t.length){ TRX = t; S.set('wd2_trx', TRX); }
+      }).catch(function(){}));
+    }
+    if(localStorage.getItem('wd2_stk')===null){
+      janji.push(window.warungDB.muatData('wd2_stk').then(function(s){
+        if(s && s.length){ STK = s; S.set('wd2_stk', STK); }
+      }).catch(function(){}));
+    }
+    Promise.all(janji).then(function(){ renderHome(); });
+  }catch(e){ console.warn('Sinkron cloud gagal:', e); }
 }
-});
+function pasangAuthListener(){
+  if(!window.warungDB || !window.warungDB.cekLogin) return;
+  window.warungDB.cekLogin(function(user){
+    if(user){
+      window.currentUser = user;
+      showDash();
+      if(!_sudahSyncCloud){ _sudahSyncCloud = true; sinkronDariCloud(); }
+    } else {
+      window.currentUser = null;
+      showLogin();
+    }
+  });
+}
+if(window.warungDB){ pasangAuthListener(); }
+else { window.addEventListener('warungdb-ready', pasangAuthListener); }
 
 // ── FITUR SIDE MENU BARU ──────────────────────────────────
 function openKulakan() {
@@ -1249,5 +1251,6 @@ function openNotif() {
   openModal(html);
 }
 </script>
+<script type="module" src="firebase-warung-digital.js"></script>
 </body>
 </html>
